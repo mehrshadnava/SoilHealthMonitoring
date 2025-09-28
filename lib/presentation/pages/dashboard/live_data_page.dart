@@ -2,14 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:soil_monitoring_app/presentation/providers/soil_provider.dart';
 import 'package:soil_monitoring_app/presentation/widgets/dashboard/sensor_gauge.dart';
+import 'package:soil_monitoring_app/presentation/widgets/dashboard/dashboard_card.dart';
 
 class LiveDataPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Live Soil Data'),
-        backgroundColor: Colors.blue[700],
+        title: Text(
+          'Live Soil Data',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Color(0xFF658C83),
+        elevation: 0,
+        centerTitle: true,
       ),
       body: Consumer<SoilProvider>(
         builder: (context, soilProvider, child) {
@@ -31,91 +42,115 @@ class LiveDataPage extends StatelessWidget {
           String timestamp = _getTimestamp(reading);
 
           return SingleChildScrollView(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(24),
             child: Column(
               children: [
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.7,
+                // Welcome Container
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(20),
+                  margin: EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF658C83),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    childAspectRatio: 0.9,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    padding: EdgeInsets.all(8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SensorGauge(
-                        value: soilMoisturePercent,
-                        title: 'Soil Moisture',
-                        unit: '%',
-                        min: 0,
-                        max: 100,
-                        optimalRange: [40, 80],
-                      ),
-                      SensorGauge(
-                        value: temperature,
-                        title: 'Temperature',
-                        unit: '°C',
-                        min: -10,
-                        max: 50,
-                        optimalRange: [15, 30],
-                      ),
-                      SensorGauge(
-                        value: humidity,
-                        title: 'Humidity',
-                        unit: '%',
-                        min: 0,
-                        max: 100,
-                        optimalRange: [40, 70],
-                      ),
-                      // Raw moisture value display
-                      Card(
-                        elevation: 4,
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Raw Moisture',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                '$soilMoistureRaw',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: _getRawMoistureColor(soilMoistureRaw),
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                'ADC Value',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
+                      Text(
+                        'Live Soil Monitoring',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
-                      // Placeholder for future sensors
-                      _buildPlaceholderCard('pH Sensor', Icons.science),
-                      _buildPlaceholderCard('Nutrients', Icons.eco),
+                      SizedBox(height: 8),
+                      Text(
+                        'Real-time soil health data and sensor readings',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
                     ],
                   ),
                 ),
+
+                // Section Header
+                Text(
+                  'Sensor Readings',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF333333),
+                  ),
+                ),
+                SizedBox(height: 16),
+
+                // First row - 2 widgets
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildSensorCard(
+                        'Soil Moisture',
+                        Icons.water_drop,
+                        '${soilMoisturePercent.toStringAsFixed(1)}%',
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: _buildSensorCard(
+                        'Temperature',
+                        Icons.thermostat,
+                        '${temperature.toStringAsFixed(1)}°C',
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+
+                // Second row - 2 widgets
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildSensorCard(
+                        'Humidity',
+                        Icons.cloud,
+                        '${humidity.toStringAsFixed(1)}%',
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: _buildSensorCard(
+                        'Raw Moisture',
+                        Icons.analytics,
+                        '$soilMoistureRaw',
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+
+                // Third row - 2 widgets (Placeholders)
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildPlaceholderCard('pH Sensor', Icons.science),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: _buildPlaceholderCard('Nutrients', Icons.eco),
+                    ),
+                  ],
+                ),
+
                 SizedBox(height: 20),
                 Card(
+                  color: Colors.grey.shade100,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: Padding(
                     padding: EdgeInsets.all(16),
                     child: Column(
@@ -123,13 +158,26 @@ class LiveDataPage extends StatelessWidget {
                       children: [
                         Text(
                           'Last Updated: ${_formatTimestamp(timestamp)}',
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontSize: 14,
+                          ),
                         ),
-                        SizedBox(height: 10),
-                        ElevatedButton.icon(
-                          onPressed: () => soilProvider.refreshData(),
-                          icon: Icon(Icons.refresh),
-                          label: Text('Refresh Data'),
+                        SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () => soilProvider.refreshData(),
+                            child: Text('Refresh Data'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF658C83),
+                              foregroundColor: Colors.white,
+                              minimumSize: Size(double.infinity, 50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -143,31 +191,86 @@ class LiveDataPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholderCard(String title, IconData icon) {
+  Widget _buildSensorCard(String title, IconData icon, String value) {
     return Card(
       elevation: 4,
-      child: Padding(
-        padding: EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Container(
+        height: 110, // Reduced height
+        padding: EdgeInsets.all(12), // Reduced padding
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40, color: Colors.grey),
-            SizedBox(height: 8),
+            Icon(
+              icon,
+              size: 28, // Smaller icon
+              color: Color(0xFF658C83),
+            ),
+            SizedBox(height: 6), // Reduced spacing
             Text(
               title,
               style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[700],
+                fontSize: 12, // Smaller font
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF333333),
               ),
+              textAlign: TextAlign.center,
+              maxLines: 1, // Prevent text wrapping
             ),
-            SizedBox(height: 4),
+            SizedBox(height: 2), // Minimal spacing
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16, // Smaller font
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF658C83),
+              ),
+              maxLines: 1, // Prevent text wrapping
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderCard(String title, IconData icon) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Container(
+        height: 110, // Reduced height
+        padding: EdgeInsets.all(12), // Reduced padding
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 28, // Smaller icon
+              color: Color(0xFF658C83),
+            ),
+            SizedBox(height: 6), // Reduced spacing
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 12, // Smaller font
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF333333),
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1, // Prevent text wrapping
+            ),
+            SizedBox(height: 2), // Minimal spacing
             Text(
               'Coming Soon',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 10, // Smaller font
                 color: Colors.grey,
               ),
+              maxLines: 1, // Prevent text wrapping
             ),
           ],
         ),
@@ -212,13 +315,5 @@ class LiveDataPage extends StatelessWidget {
     } catch (e) {
       return timestamp;
     }
-  }
-
-  // Helper method to get color for raw moisture value
-  Color _getRawMoistureColor(int rawValue) {
-    if (rawValue > 3000) return Colors.red; // Very wet
-    if (rawValue > 2000) return Colors.green; // Optimal
-    if (rawValue > 1000) return Colors.orange; // Dry
-    return Colors.red; // Very dry
   }
 }
