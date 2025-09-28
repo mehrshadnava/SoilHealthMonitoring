@@ -1,16 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
 class FirebaseService {
-  // Force demo mode since Firebase isn't configured
-  bool _firebaseInitialized = false;
+  FirebaseService(); // Simple constructor
 
-  FirebaseService() {
-    // Always use demo mode for now
-    _firebaseInitialized = false;
-  }
-
-  // Auth methods - always use demo mode
+  // Auth methods - demo mode
   Future<dynamic> signInWithEmail(String email, String password) async {
     // Demo mode - simulate successful login after delay
     await Future.delayed(const Duration(seconds: 2));
@@ -31,7 +22,7 @@ class FirebaseService {
     };
   }
 
-  // Soil Reading methods - always return demo data
+  // Soil Reading methods - demo data
   Stream<List<dynamic>> getSoilReadings() {
     // Return demo data stream that updates every 3 seconds
     return Stream.periodic(const Duration(seconds: 3), (count) {
@@ -44,13 +35,13 @@ class FirebaseService {
     return [
       {
         'id': 'demo-${now.millisecondsSinceEpoch}',
-        'pH': 6.5 + (now.second % 10) * 0.1, // Varies between 6.5-7.5
-        'moisture': 40.0 + (now.second % 30), // Varies between 40-70%
-        'temperature': 22.0 + (now.second % 15), // Varies between 22-37°C
-        'nitrogen': 25.0 + (now.second % 20), // Varies between 25-45 mg/kg
-        'phosphorus': 20.0 + (now.second % 15), // Varies between 20-35 mg/kg
-        'potassium': 180.0 + (now.second % 50), // Varies between 180-230 mg/kg
-        'electricalConductivity': 1.2 + (now.second % 10) * 0.1, // Varies between 1.2-2.2 dS/m
+        'pH': 6.5 + (now.second % 10) * 0.1,
+        'moisture': 40.0 + (now.second % 30),
+        'temperature': 22.0 + (now.second % 15),
+        'nitrogen': 25.0 + (now.second % 20),
+        'phosphorus': 20.0 + (now.second % 15),
+        'potassium': 180.0 + (now.second % 50),
+        'electricalConductivity': 1.2 + (now.second % 10) * 0.1,
         'timestamp': now.toIso8601String(),
         'location': 'Demo Field A'
       }
