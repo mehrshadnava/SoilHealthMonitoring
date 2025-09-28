@@ -7,7 +7,6 @@ class SplashPage extends StatefulWidget {
   _SplashPageState createState() => _SplashPageState();
 }
 
-
 class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
@@ -23,12 +22,12 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[700],
+      backgroundColor: Color(0xFF658C83), // New green color
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.eco, size: 100, color: Colors.white),
+            Icon(Icons.agriculture, size: 100, color: Colors.white), // Changed to tractor icon
             SizedBox(height: 20),
             Text(
               'Soil Monitor',
