@@ -1,10 +1,10 @@
 // ignore_for_file: unnecessary_cast
 
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final DatabaseReference _database = FirebaseDatabase.instance.ref();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Real Firebase Authentication methods
@@ -24,31 +24,16 @@ class FirebaseService {
 
   Future<User?> registerWithEmail(String email, String password) async {
     try {
-      // Create user in Firebase Authentication
       UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      
-      // Create user document in Firestore
-      await _createUserDocument(result.user!, email);
-      
       return result.user;
     } on FirebaseAuthException catch (e) {
       throw _getAuthErrorMessage(e);
     } catch (e) {
       throw 'An unexpected error occurred. Please try again.';
     }
-  }
-
-  Future<void> _createUserDocument(User user, String email) async {
-    await _firestore.collection('users').doc(user.uid).set({
-      'uid': user.uid,
-      'email': email,
-      'displayName': email.split('@')[0], // Use email prefix as display name
-      'createdAt': FieldValue.serverTimestamp(),
-      'lastLogin': FieldValue.serverTimestamp(),
-    });
   }
 
   String _getAuthErrorMessage(FirebaseAuthException e) {
@@ -87,50 +72,149 @@ class FirebaseService {
     return _auth.currentUser != null;
   }
 
-  // Soil Reading methods - real Firebase Firestore
+  // UPDATED: Soil Reading methods for Realtime Database
   Stream<List<Map<String, dynamic>>> getSoilReadings() {
-    return _firestore
-        .collection('sensor_readings')
-        .orderBy('timestamp', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) {
-              Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-              data['id'] = doc.id;
-              return data;
-            }).toList());
+    return _database
+        .child('sensorData')
+        .orderByKey()
+        .limitToLast(50)
+        .onValue
+        .map((event) {
+      final Map<dynamic, dynamic>? data = event.snapshot.value as Map<dynamic, dynamic>?;
+      final List<Map<String, dynamic>> readings = [];
+      
+      if (data != null) {
+        data.forEach((key, value) {
+          try {
+            final readingData = Map<String, dynamic>.from(value);
+            readingData['id'] = key.toString();
+            readings.add(readingData);
+          } catch (e) {
+            print('Error parsing reading $key: $e');
+          }
+        });
+      }
+      
+      // Sort by timestamp descending (newest first)
+      readings.sort((a, b) {
+        final timestampA = _getTimestampFromData(a);
+        final timestampB = _getTimestampFromData(b);
+        return timestampB.compareTo(timestampA);
+      });
+      return readings;
+    });
   }
 
+  // UPDATED: Get latest reading stream
+  Stream<Map<String, dynamic>?> getLatestReadingStream() {
+    return _database
+        .child('sensorData')
+        .orderByKey()
+        .limitToLast(1)
+        .onValue
+        .map((event) {
+      final Map<dynamic, dynamic>? data = event.snapshot.value as Map<dynamic, dynamic>?;
+      
+      if (data != null && data.isNotEmpty) {
+        final entry = data.entries.first;
+        try {
+          final readingData = Map<String, dynamic>.from(entry.value);
+          readingData['id'] = entry.key.toString();
+          return readingData;
+        } catch (e) {
+          print('Error parsing latest reading: $e');
+        }
+      }
+      return null;
+    });
+  }
+
+  // UPDATED: Get historical readings
   Future<List<Map<String, dynamic>>> getHistoricalReadings(DateTime start, DateTime end) async {
-    final snapshot = await _firestore
-        .collection('sensor_readings')
-        .where('timestamp', isGreaterThan: start)
-        .where('timestamp', isLessThan: end)
-        .orderBy('timestamp', descending: true)
-        .get();
+    final startTimestamp = start.millisecondsSinceEpoch;
+    final endTimestamp = end.millisecondsSinceEpoch;
+    
+    final snapshot = await _database
+        .child('sensorData')
+        .orderByKey()
+        .startAt(startTimestamp.toString())
+        .endAt(endTimestamp.toString())
+        .once();
 
-    return snapshot.docs.map((doc) {
-      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      data['id'] = doc.id;
-      return data;
-    }).toList();
+    final Map<dynamic, dynamic>? data = snapshot.snapshot.value as Map<dynamic, dynamic>?;
+    final List<Map<String, dynamic>> readings = [];
+    
+    if (data != null) {
+      data.forEach((key, value) {
+        try {
+          final readingData = Map<String, dynamic>.from(value);
+          readingData['id'] = key.toString();
+          readings.add(readingData);
+        } catch (e) {
+          print('Error parsing historical reading $key: $e');
+        }
+      });
+    }
+    
+    // Sort by timestamp descending
+    readings.sort((a, b) {
+      final timestampA = _getTimestampFromData(a);
+      final timestampB = _getTimestampFromData(b);
+      return timestampB.compareTo(timestampA);
+    });
+    return readings;
   }
 
+  // UPDATED: Get single latest reading
   Future<Map<String, dynamic>?> getLatestReading() async {
-    final snapshot = await _firestore
-        .collection('sensor_readings')
-        .orderBy('timestamp', descending: true)
-        .limit(1)
-        .get();
+    final snapshot = await _database
+        .child('sensorData')
+        .orderByKey()
+        .limitToLast(1)
+        .once();
 
-    if (snapshot.docs.isNotEmpty) {
-      Map<String, dynamic> data = snapshot.docs.first.data() as Map<String, dynamic>;
-      data['id'] = snapshot.docs.first.id;
-      return data;
+    final Map<dynamic, dynamic>? data = snapshot.snapshot.value as Map<dynamic, dynamic>?;
+    
+    if (data != null && data.isNotEmpty) {
+      final entry = data.entries.first;
+      try {
+        final readingData = Map<String, dynamic>.from(entry.value);
+        readingData['id'] = entry.key.toString();
+        return readingData;
+      } catch (e) {
+        print('Error parsing latest reading: $e');
+      }
     }
     return null;
   }
 
+  // Helper to get timestamp from data
+  DateTime _getTimestampFromData(Map<String, dynamic> data) {
+    try {
+      // Try to get timestamp from the data
+      if (data['timestamp'] != null) {
+        if (data['timestamp'] is int) {
+          return DateTime.fromMillisecondsSinceEpoch(data['timestamp']);
+        } else if (data['timestamp'] is String) {
+          return DateTime.parse(data['timestamp']);
+        }
+      }
+      // Fallback: use the key as timestamp
+      if (data['id'] != null) {
+        return DateTime.fromMillisecondsSinceEpoch(int.parse(data['id']));
+      }
+    } catch (e) {
+      print('Error parsing timestamp: $e');
+    }
+    return DateTime.now();
+  }
+
+  // Add soil reading (if needed)
   Future<void> addSoilReading(Map<String, dynamic> reading) async {
-    await _firestore.collection('sensor_readings').add(reading);
+    final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+    await _database
+        .child('sensorData')
+        .child(timestamp)
+        .set(reading);
   }
 }

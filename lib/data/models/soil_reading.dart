@@ -1,24 +1,18 @@
 class SoilReading {
   final String id;
-  final double pH;
-  final double moisture;
+  final double humidity;
+  final double soilMoisturePercent;
+  final int soilMoistureRaw;
   final double temperature;
-  final double nitrogen;
-  final double phosphorus;
-  final double potassium;
-  final double electricalConductivity;
   final DateTime timestamp;
   final String? location;
 
   SoilReading({
     required this.id,
-    required this.pH,
-    required this.moisture,
+    required this.humidity,
+    required this.soilMoisturePercent,
+    required this.soilMoistureRaw,
     required this.temperature,
-    required this.nitrogen,
-    required this.phosphorus,
-    required this.potassium,
-    required this.electricalConductivity,
     required this.timestamp,
     this.location,
   });
@@ -26,29 +20,39 @@ class SoilReading {
   factory SoilReading.fromMap(Map<String, dynamic> map) {
     return SoilReading(
       id: map['id'] ?? '',
-      pH: (map['pH'] ?? 0.0).toDouble(),
-      moisture: (map['moisture'] ?? 0.0).toDouble(),
+      humidity: (map['humidity'] ?? 0.0).toDouble(),
+      soilMoisturePercent: (map['soilMoisturePercent'] ?? 0.0).toDouble(),
+      soilMoistureRaw: (map['soilMoistureRaw'] ?? 0).toInt(),
       temperature: (map['temperature'] ?? 0.0).toDouble(),
-      nitrogen: (map['nitrogen'] ?? 0.0).toDouble(),
-      phosphorus: (map['phosphorus'] ?? 0.0).toDouble(),
-      potassium: (map['potassium'] ?? 0.0).toDouble(),
-      electricalConductivity: (map['electricalConductivity'] ?? 0.0).toDouble(),
-      timestamp: DateTime.parse(map['timestamp'] ?? DateTime.now().toIso8601String()),
+      timestamp: _parseTimestamp(map),
       location: map['location'],
     );
+  }
+
+  static DateTime _parseTimestamp(Map<String, dynamic> map) {
+    try {
+      if (map['timestamp'] is int) {
+        return DateTime.fromMillisecondsSinceEpoch(map['timestamp']);
+      } else if (map['timestamp'] is String) {
+        return DateTime.parse(map['timestamp']);
+      } else if (map['id'] != null) {
+        // Use the ID as timestamp (Firebase key)
+        return DateTime.fromMillisecondsSinceEpoch(int.parse(map['id']));
+      }
+    } catch (e) {
+      print('Error parsing timestamp: $e');
+    }
+    return DateTime.now();
   }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'pH': pH,
-      'moisture': moisture,
+      'humidity': humidity,
+      'soilMoisturePercent': soilMoisturePercent,
+      'soilMoistureRaw': soilMoistureRaw,
       'temperature': temperature,
-      'nitrogen': nitrogen,
-      'phosphorus': phosphorus,
-      'potassium': potassium,
-      'electricalConductivity': electricalConductivity,
-      'timestamp': timestamp.toIso8601String(),
+      'timestamp': timestamp.millisecondsSinceEpoch,
       'location': location,
     };
   }

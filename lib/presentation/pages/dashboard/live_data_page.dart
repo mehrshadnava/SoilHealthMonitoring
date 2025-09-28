@@ -23,44 +23,33 @@ class LiveDataPage extends StatelessWidget {
 
           final reading = soilProvider.latestReading!;
 
-          // Safely extract values from the map
-          double pH = _getDoubleValue(reading, 'pH');
-          double moisture = _getDoubleValue(reading, 'moisture');
+          // Extract values from the new data structure
+          double humidity = _getDoubleValue(reading, 'humidity');
+          double soilMoisturePercent = _getDoubleValue(reading, 'soilMoisturePercent');
+          int soilMoistureRaw = _getIntValue(reading, 'soilMoistureRaw');
           double temperature = _getDoubleValue(reading, 'temperature');
-          double nitrogen = _getDoubleValue(reading, 'nitrogen');
-          double phosphorus = _getDoubleValue(reading, 'phosphorus');
-          double potassium = _getDoubleValue(reading, 'potassium');
           String timestamp = _getTimestamp(reading);
 
           return SingleChildScrollView(
             padding: EdgeInsets.all(16),
             child: Column(
               children: [
-                // Fixed: Use ConstrainedBox to limit GridView height
                 ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.7, // 70% of screen height
+                    maxHeight: MediaQuery.of(context).size.height * 0.7,
                   ),
                   child: GridView.count(
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
-                    childAspectRatio: 0.9, // Adjust aspect ratio for better fit
+                    childAspectRatio: 0.9,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                     padding: EdgeInsets.all(8),
                     children: [
                       SensorGauge(
-                        value: pH,
-                        title: 'pH Level',
-                        unit: '',
-                        min: 0,
-                        max: 14,
-                        optimalRange: [6.0, 7.5],
-                      ),
-                      SensorGauge(
-                        value: moisture,
-                        title: 'Moisture',
+                        value: soilMoisturePercent,
+                        title: 'Soil Moisture',
                         unit: '%',
                         min: 0,
                         max: 100,
@@ -75,29 +64,53 @@ class LiveDataPage extends StatelessWidget {
                         optimalRange: [15, 30],
                       ),
                       SensorGauge(
-                        value: nitrogen,
-                        title: 'Nitrogen',
-                        unit: 'mg/kg',
+                        value: humidity,
+                        title: 'Humidity',
+                        unit: '%',
                         min: 0,
                         max: 100,
-                        optimalRange: [20, 50],
+                        optimalRange: [40, 70],
                       ),
-                      SensorGauge(
-                        value: phosphorus,
-                        title: 'Phosphorus',
-                        unit: 'mg/kg',
-                        min: 0,
-                        max: 100,
-                        optimalRange: [15, 40],
+                      // Raw moisture value display
+                      Card(
+                        elevation: 4,
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Raw Moisture',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                '$soilMoistureRaw',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: _getRawMoistureColor(soilMoistureRaw),
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'ADC Value',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      SensorGauge(
-                        value: potassium,
-                        title: 'Potassium',
-                        unit: 'mg/kg',
-                        min: 0,
-                        max: 300,
-                        optimalRange: [150, 250],
-                      ),
+                      // Placeholder for future sensors
+                      _buildPlaceholderCard('pH Sensor', Icons.science),
+                      _buildPlaceholderCard('Nutrients', Icons.eco),
                     ],
                   ),
                 ),
@@ -130,6 +143,38 @@ class LiveDataPage extends StatelessWidget {
     );
   }
 
+  Widget _buildPlaceholderCard(String title, IconData icon) {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 40, color: Colors.grey),
+            SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700],
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Coming Soon',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // Helper method to safely get double values from the map
   double _getDoubleValue(Map<String, dynamic> reading, String key) {
     final value = reading[key];
@@ -139,10 +184,22 @@ class LiveDataPage extends StatelessWidget {
     return 0.0;
   }
 
+  // Helper method to safely get int values from the map
+  int _getIntValue(Map<String, dynamic> reading, String key) {
+    final value = reading[key];
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
+
   // Helper method to get timestamp from the map
   String _getTimestamp(Map<String, dynamic> reading) {
     final timestamp = reading['timestamp'];
     if (timestamp is String) return timestamp;
+    if (timestamp is int) {
+      return DateTime.fromMillisecondsSinceEpoch(timestamp).toIso8601String();
+    }
     if (timestamp is DateTime) return timestamp.toIso8601String();
     return 'Unknown';
   }
@@ -151,9 +208,17 @@ class LiveDataPage extends StatelessWidget {
   String _formatTimestamp(String timestamp) {
     try {
       final dateTime = DateTime.parse(timestamp);
-      return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}';
     } catch (e) {
       return timestamp;
     }
+  }
+
+  // Helper method to get color for raw moisture value
+  Color _getRawMoistureColor(int rawValue) {
+    if (rawValue > 3000) return Colors.red; // Very wet
+    if (rawValue > 2000) return Colors.green; // Optimal
+    if (rawValue > 1000) return Colors.orange; // Dry
+    return Colors.red; // Very dry
   }
 }
