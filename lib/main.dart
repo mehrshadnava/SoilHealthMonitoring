@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:soil_monitoring_app/presentation/providers/soil_provider.dart';
 import 'package:soil_monitoring_app/presentation/providers/auth_provider.dart';
@@ -6,8 +7,22 @@ import 'package:soil_monitoring_app/presentation/providers/theme_provider.dart';
 import 'package:soil_monitoring_app/core/themes/app_theme.dart';
 import 'package:soil_monitoring_app/routes/route_generator.dart';
 import 'package:soil_monitoring_app/presentation/pages/splash_page.dart';
+import 'package:soil_monitoring_app/core/constants/firebase_options.dart'; // Make sure this import exists
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    // Initialize Firebase with your configuration
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('✅ Firebase initialized successfully!');
+  } catch (e) {
+    print('❌ Firebase initialization failed: $e');
+    // Continue running the app in demo mode
+  }
+  
   runApp(const MyApp());
 }
 
