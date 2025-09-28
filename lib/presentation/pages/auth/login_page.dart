@@ -13,9 +13,9 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   bool rememberPassword = true;
 
-  // Define colors as constants to avoid null issues
-  final Color primaryColor = Colors.green[700]!; // Non-null assertion
-  final Color primaryColorLight = Colors.green[50]!;
+  // Define new color RGB: (101, 140, 131) Hex: #658C83
+  final Color primaryColor = Color(0xFF658C83);
+  final Color primaryColorLight = Color(0xFF658C83).withOpacity(0.2);
   final Color errorColor = Colors.red;
 
   @override
@@ -29,31 +29,27 @@ class _LoginPageState extends State<LoginPage> {
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
+          // Background image
           Image.asset(
-  'assets/images/bg1.png',
-  fit: BoxFit.cover,
-  width: double.infinity,
-  height: double.infinity,
-  errorBuilder: (context, error, stackTrace) {
-    print("❌ Image error: $error");
-    return Container(color: Colors.red); // Red background if image fails
-  },
-),
+            'assets/images/bg1.png',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            errorBuilder: (context, error, stackTrace) {
+              print("❌ Image error: $error");
+              return Container(color: Colors.red); // fallback background
+            },
+          ),
           SafeArea(
             child: Column(
               children: [
-                const Expanded(
-                  flex: 1,
-                  child: SizedBox(
-                    height: 10,
-                  ),
-                ),
+                const Expanded(flex: 1, child: SizedBox(height: 10)),
                 Expanded(
                   flex: 7,
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(25.0, 50.0, 25.0, 20.0),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(40.0),
                         topRight: Radius.circular(40.0),
@@ -65,12 +61,8 @@ class _LoginPageState extends State<LoginPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            // App Logo/Icon
-                            Icon(
-                              Icons.eco,
-                              size: 60,
-                              color: primaryColor,
-                            ),
+                            // App Logo/Icon - Changed to leaf
+                            Icon(Icons.agriculture, size: 60, color: primaryColor),
                             SizedBox(height: 16),
                             Text(
                               'Soil Monitor',
@@ -89,7 +81,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                             SizedBox(height: 40),
-                            
+
                             // Error Message
                             Consumer<AuthProvider>(
                               builder: (context, authProvider, child) {
@@ -100,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
                                     margin: EdgeInsets.only(bottom: 16),
                                     decoration: BoxDecoration(
                                       color: Colors.red[50],
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(15),
                                       border: Border.all(color: Colors.red[200]!),
                                     ),
                                     child: Row(
@@ -126,83 +118,101 @@ class _LoginPageState extends State<LoginPage> {
                                 return SizedBox.shrink();
                               },
                             ),
-                            
-                            // Email Field
+
+                            // Email Field - More curvy shape with original icon
                             TextFormField(
                               controller: _emailController,
                               decoration: InputDecoration(
                                 labelText: 'Email',
                                 hintText: 'Enter your email',
-                                hintStyle: TextStyle(
-                                  color: Colors.black26,
-                                ),
+                                hintStyle: TextStyle(color: Colors.black26),
+                                fillColor: Colors.white,
+                                filled: true,
+                                prefixIcon: Icon(Icons.email, color: primaryColor),
                                 border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Colors.black12,
+                                  borderSide: BorderSide(color: Colors.black12),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(20),
+                                    topRight: Radius.circular(20),
+                                    bottomLeft: Radius.circular(35),
+                                    bottomRight: Radius.circular(35),
                                   ),
-                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Colors.black12,
+                                  borderSide: BorderSide(color: Colors.black12),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(20),
+                                    topRight: Radius.circular(20),
+                                    bottomLeft: Radius.circular(35),
+                                    bottomRight: Radius.circular(35),
                                   ),
-                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: primaryColor),
+                                  borderSide: BorderSide(color: primaryColor, width: 2),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(20),
+                                    topRight: Radius.circular(20),
+                                    bottomLeft: Radius.circular(35),
+                                    bottomRight: Radius.circular(35),
+                                  ),
                                 ),
                               ),
                               keyboardType: TextInputType.emailAddress,
                               validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your email';
-                                }
-                                if (!value.contains('@')) {
-                                  return 'Please enter a valid email';
-                                }
+                                if (value == null || value.isEmpty) return 'Please enter your email';
+                                if (!value.contains('@')) return 'Please enter a valid email';
                                 return null;
                               },
                             ),
                             SizedBox(height: 25),
-                            
-                            // Password Field
+
+                            // Password Field - More curvy shape with original icon
                             TextFormField(
                               controller: _passwordController,
                               obscureText: true,
                               decoration: InputDecoration(
                                 labelText: 'Password',
                                 hintText: 'Enter your password',
-                                hintStyle: TextStyle(
-                                  color: Colors.black26,
-                                ),
+                                hintStyle: TextStyle(color: Colors.black26),
+                                fillColor: Colors.white,
+                                filled: true,
+                                prefixIcon: Icon(Icons.lock, color: primaryColor),
                                 border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Colors.black12,
+                                  borderSide: BorderSide(color: Colors.black12),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(20),
+                                    topRight: Radius.circular(20),
+                                    bottomLeft: Radius.circular(35),
+                                    bottomRight: Radius.circular(35),
                                   ),
-                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: Colors.black12,
+                                  borderSide: BorderSide(color: Colors.black12),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(20),
+                                    topRight: Radius.circular(20),
+                                    bottomLeft: Radius.circular(35),
+                                    bottomRight: Radius.circular(35),
                                   ),
-                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: primaryColor),
+                                  borderSide: BorderSide(color: primaryColor, width: 2),
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(20),
+                                    topRight: Radius.circular(20),
+                                    bottomLeft: Radius.circular(35),
+                                    bottomRight: Radius.circular(35),
+                                  ),
                                 ),
                               ),
                               validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your password';
-                                }
-                                if (value.length < 6) {
-                                  return 'Password must be at least 6 characters';
-                                }
+                                if (value == null || value.isEmpty) return 'Please enter your password';
+                                if (value.length < 6) return 'Password must be at least 6 characters';
                                 return null;
                               },
                             ),
                             SizedBox(height: 25),
-                            
+
                             // Remember me & Forgot Password
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -217,40 +227,31 @@ class _LoginPageState extends State<LoginPage> {
                                         });
                                       },
                                       activeColor: primaryColor,
-                                    ),
-                                    Text(
-                                      'Remember me',
-                                      style: TextStyle(
-                                        color: Colors.black45,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(5),
                                       ),
                                     ),
+                                    Text('Remember me', style: TextStyle(color: Colors.black45)),
                                   ],
                                 ),
                                 GestureDetector(
-                                  onTap: () {
-                                    _showForgotPasswordDialog(context);
-                                  },
+                                  onTap: () => _showForgotPasswordDialog(context),
                                   child: Text(
                                     'Forgot Password?',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: primaryColor,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor),
                                   ),
                                 ),
                               ],
                             ),
                             SizedBox(height: 25),
-                            
-                            // Login Button
+
+                            // Login Button - More curvy shape
                             Consumer<AuthProvider>(
                               builder: (context, authProvider, child) {
                                 return SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton(
-                                    onPressed: authProvider.isLoading
-                                        ? null
-                                        : () => _login(context),
+                                    onPressed: authProvider.isLoading ? null : () => _login(context),
                                     child: authProvider.isLoading
                                         ? SizedBox(
                                             height: 20,
@@ -260,16 +261,18 @@ class _LoginPageState extends State<LoginPage> {
                                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                             ),
                                           )
-                                        : Text(
-                                            'Sign In',
-                                            style: TextStyle(fontSize: 16),
-                                          ),
+                                        : Text('Sign In', style: TextStyle(fontSize: 16)),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: primaryColor,
                                       foregroundColor: Colors.white,
                                       minimumSize: Size(double.infinity, 50),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(20),
+                                          topRight: Radius.circular(20),
+                                          bottomLeft: Radius.circular(35),
+                                          bottomRight: Radius.circular(35),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -277,83 +280,59 @@ class _LoginPageState extends State<LoginPage> {
                               },
                             ),
                             SizedBox(height: 25),
-                            
+
                             // Divider
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Expanded(
-                                  child: Divider(
-                                    thickness: 0.7,
-                                    color: Colors.grey.withOpacity(0.5),
-                                  ),
+                                  child: Divider(thickness: 0.7, color: Colors.grey.withOpacity(0.5)),
                                 ),
                                 Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 10),
-                                  child: Text(
-                                    'OR',
-                                    style: TextStyle(
-                                      color: Colors.black45,
-                                    ),
-                                  ),
+                                  child: Text('OR', style: TextStyle(color: Colors.black45)),
                                 ),
                                 Expanded(
-                                  child: Divider(
-                                    thickness: 0.7,
-                                    color: Colors.grey.withOpacity(0.5),
-                                  ),
+                                  child: Divider(thickness: 0.7, color: Colors.grey.withOpacity(0.5)),
                                 ),
                               ],
                             ),
                             SizedBox(height: 25),
-                            
+
                             // Register Link
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(
-                                  "Don't have an account? ",
-                                  style: TextStyle(
-                                    color: Colors.black45,
-                                  ),
-                                ),
+                                Text("Don't have an account? ", style: TextStyle(color: Colors.black45)),
                                 GestureDetector(
-                                  onTap: () {
-                                    Navigator.pushNamed(context, '/register');
-                                  },
-                                  child: Text(
-                                    'Sign Up',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: primaryColor,
-                                    ),
-                                  ),
+                                  onTap: () => Navigator.pushNamed(context, '/register'),
+                                  child: Text('Sign Up', style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
                                 ),
                               ],
                             ),
                             SizedBox(height: 20),
-                            
-                            // Demo Credentials (for testing)
+
+                            // Demo Credentials Card - More curvy shape
                             Card(
-                              color: primaryColorLight,
+                              color: Colors.grey.shade300,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(20),
+                                  topRight: Radius.circular(20),
+                                  bottomLeft: Radius.circular(35),
+                                  bottomRight: Radius.circular(35),
+                                ),
+                              ),
                               child: Padding(
-                                padding: EdgeInsets.all(12),
+                                padding: EdgeInsets.all(16),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Demo Credentials:',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: primaryColor,
-                                      ),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      'Email: demo@example.com\nPassword: 123456',
-                                      style: TextStyle(fontSize: 12, color: primaryColor),
-                                    ),
+                                    Text('Demo Credentials:', style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
                                     SizedBox(height: 8),
+                                    Text('Email: demo@example.com\nPassword: 123456',
+                                        style: TextStyle(fontSize: 12, color: primaryColor)),
+                                    SizedBox(height: 12),
                                     ElevatedButton(
                                       onPressed: () {
                                         _emailController.text = 'demo@example.com';
@@ -365,6 +344,14 @@ class _LoginPageState extends State<LoginPage> {
                                         backgroundColor: primaryColor,
                                         foregroundColor: Colors.white,
                                         minimumSize: Size(double.infinity, 36),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(15),
+                                            topRight: Radius.circular(15),
+                                            bottomLeft: Radius.circular(30),
+                                            bottomRight: Radius.circular(30),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -388,15 +375,9 @@ class _LoginPageState extends State<LoginPage> {
   _login(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.login(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-      
+      await authProvider.login(_emailController.text.trim(), _passwordController.text);
       if (authProvider.user != null) {
-        // Clear any previous errors
         authProvider.clearError();
-        // Navigate to dashboard
         Navigator.pushReplacementNamed(context, '/dashboard');
       }
     }
