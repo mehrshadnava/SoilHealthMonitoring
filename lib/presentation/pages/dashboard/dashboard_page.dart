@@ -5,45 +5,116 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Soil Monitoring Dashboard'),
-        backgroundColor: Colors.green[700],
+        title: Text(
+          'Soil Monitoring Dashboard',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Color(0xFF648b81),
         elevation: 0,
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
+      body: SafeArea(
+        child: ListView(
+          padding: EdgeInsets.all(24),
           children: [
-            DashboardCard(
-              title: 'Live Data',
-              icon: Icons.monitor_heart,
-              color: Colors.blue,
-              onTap: () => Navigator.pushNamed(context, '/live_data'),
+            // Welcome Container
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(20),
+              margin: EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: Color(0xFF648b81),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Welcome to Soil Monitor',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Monitor your soil health and get smart recommendations',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            DashboardCard(
-              title: 'Past Data',
-              icon: Icons.history,
-              color: Colors.orange,
-              onTap: () => Navigator.pushNamed(context, '/past_data'),
+
+            // Section Header
+            Text(
+              'Soil Monitoring Features',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF333333),
+              ),
             ),
-            DashboardCard(
-              title: 'Soil Report',
-              icon: Icons.analytics,
-              color: Colors.purple,
-              onTap: () => Navigator.pushNamed(context, '/report'),
+            SizedBox(height: 16),
+
+            // First row - 2 widgets
+            Row(
+              children: [
+                Expanded(
+                  child: DashboardCard(
+                    title: 'Live Data',
+                    icon: Icons.monitor_heart,
+                    color: Color(0xFF648b81), // Green color
+                    onTap: () => Navigator.pushNamed(context, '/live_data'),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: DashboardCard(
+                    title: 'Past Data',
+                    icon: Icons.history,
+                    color: Color(0xFF648b81), // Green color
+                    onTap: () => Navigator.pushNamed(context, '/past_data'),
+                  ),
+                ),
+              ],
             ),
-            DashboardCard(
-              title: 'Recommendations',
-              icon: Icons.eco,
-              color: Colors.green,
-              onTap: () => Navigator.pushNamed(context, '/recommendations'),
+            SizedBox(height: 12),
+
+            // Second row - 2 widgets
+            Row(
+              children: [
+                Expanded(
+                  child: DashboardCard(
+                    title: 'Soil Report',
+                    icon: Icons.analytics,
+                    color: Color(0xFF648b81), // Green color
+                    onTap: () => Navigator.pushNamed(context, '/report'),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: DashboardCard(
+                    title: 'Recommendations',
+                    icon: Icons.eco,
+                    color: Color(0xFF648b81), // Green color
+                    onTap: () => Navigator.pushNamed(context, '/recommendations'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-      ),
-    );
-  }
+     ),
+);
+}
 }
