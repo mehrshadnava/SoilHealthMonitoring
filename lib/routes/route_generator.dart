@@ -5,10 +5,13 @@ import 'package:soil_monitoring_app/presentation/pages/auth/register_page.dart';
 import 'package:soil_monitoring_app/presentation/pages/dashboard/dashboard_page.dart';
 import 'package:soil_monitoring_app/presentation/pages/dashboard/live_data_page.dart';
 import 'package:soil_monitoring_app/presentation/pages/dashboard/past_data_page.dart';
-import 'package:soil_monitoring_app/presentation/pages/dashboard/report_page.dart';
-import 'package:soil_monitoring_app/presentation/pages/dashboard/recommendations_page.dart';
+//import 'package:soil_monitoring_app/presentation/pages/dashboard/report_page.dart';
+//import 'package:soil_monitoring_app/presentation/pages/dashboard/recommendations_page.dart';
+import 'package:soil_monitoring_app/screens/report_screen.dart';
+import 'package:soil_monitoring_app/screens/recommendation_screen.dart';
 
 class RouteGenerator {
+
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':
@@ -24,9 +27,9 @@ class RouteGenerator {
       case '/past_data':
         return MaterialPageRoute(builder: (_) => PastDataPage());
       case '/report':
-        return MaterialPageRoute(builder: (_) => ReportPage());
+        return MaterialPageRoute(builder: (_) => ReportScreen());
       case '/recommendations':
-        return MaterialPageRoute(builder: (_) => RecommendationsPage());
+        return MaterialPageRoute(builder: (_) => RecommendationScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
