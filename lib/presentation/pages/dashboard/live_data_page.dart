@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:soil_monitoring_app/presentation/providers/soil_provider.dart';
-import 'package:soil_monitoring_app/presentation/widgets/dashboard/sensor_gauge.dart';
-import 'package:soil_monitoring_app/presentation/widgets/dashboard/dashboard_card.dart';
 
 class LiveDataPage extends StatelessWidget {
   @override

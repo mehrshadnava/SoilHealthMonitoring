@@ -131,14 +131,14 @@ class FirebaseService {
 
   // UPDATED: Get historical readings
   Future<List<Map<String, dynamic>>> getHistoricalReadings(DateTime start, DateTime end) async {
-    final startTimestamp = start.millisecondsSinceEpoch;
-    final endTimestamp = end.millisecondsSinceEpoch;
+    final startTimestamp = start.millisecondsSinceEpoch.toString();
+    final endTimestamp = end.millisecondsSinceEpoch.toString();
     
     final snapshot = await _database
         .child('sensorData')
         .orderByKey()
-        .startAt(startTimestamp.toString())
-        .endAt(endTimestamp.toString())
+        .startAt(startTimestamp)
+        .endAt(endTimestamp)
         .once();
 
     final Map<dynamic, dynamic>? data = snapshot.snapshot.value as Map<dynamic, dynamic>?;
@@ -188,6 +188,56 @@ class FirebaseService {
     return null;
   }
 
+  // NEW: Get latest soil data (alias for getLatestReading)
+  Future<Map<String, dynamic>?> getLatestSoilData() async {
+    return await getLatestReading();
+  }
+
+  // NEW: Get historical average
+  Future<Map<String, dynamic>> getHistoricalAverage(int days) async {
+    try {
+      final endDate = DateTime.now();
+      final startDate = endDate.subtract(Duration(days: days));
+      
+      final historicalReadings = await getHistoricalReadings(startDate, endDate);
+      
+      if (historicalReadings.isEmpty) {
+        return {};
+      }
+
+      // Calculate averages for numeric fields
+      Map<String, dynamic> averages = {};
+      Map<String, double> sums = {};
+      Map<String, int> counts = {};
+
+      for (var reading in historicalReadings) {
+        reading.forEach((key, value) {
+          if (value is num) {
+            sums[key] = (sums[key] ?? 0.0) + value.toDouble();
+            counts[key] = (counts[key] ?? 0) + 1;
+          }
+        });
+      }
+
+      // Calculate averages
+      sums.forEach((key, sum) {
+        final count = counts[key] ?? 1;
+        averages[key] = sum / count;
+      });
+
+      // Add metadata
+      averages['_totalReadings'] = historicalReadings.length;
+      averages['_periodDays'] = days;
+      averages['_fromDate'] = startDate.toIso8601String();
+      averages['_toDate'] = endDate.toIso8601String();
+
+      return averages;
+    } catch (e) {
+      print('Error calculating historical average: $e');
+      return {};
+    }
+  }
+
   // Helper to get timestamp from data
   DateTime _getTimestampFromData(Map<String, dynamic> data) {
     try {
@@ -199,7 +249,7 @@ class FirebaseService {
           return DateTime.parse(data['timestamp']);
         }
       }
-      // Fallback: use the key as timestamp
+      // Fallback: use the key as timestamp (assuming key is timestamp)
       if (data['id'] != null) {
         return DateTime.fromMillisecondsSinceEpoch(int.parse(data['id']));
       }
