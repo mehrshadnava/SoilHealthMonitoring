@@ -1,16 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:soil_monitoring_app/presentation/providers/soil_provider.dart';
-import 'package:soil_monitoring_app/presentation/widgets/dashboard/sensor_gauge.dart';
-import 'package:soil_monitoring_app/presentation/widgets/dashboard/dashboard_card.dart';
 
-class LiveDataPage extends StatelessWidget {
+class LiveDataPage extends StatefulWidget {
+  const LiveDataPage({super.key});
+
+  @override
+  State<LiveDataPage> createState() => _LiveDataPageState();
+}
+
+class _LiveDataPageState extends State<LiveDataPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final soilProvider = Provider.of<SoilProvider>(context, listen: false);
+      soilProvider.startRealtimeUpdates();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Live Soil Data',
           style: TextStyle(
             fontSize: 20,
@@ -18,216 +32,285 @@ class LiveDataPage extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        backgroundColor: Color(0xFF658C83),
+        backgroundColor: const Color(0xFF658C83),
         elevation: 0,
         centerTitle: true,
       ),
       body: Consumer<SoilProvider>(
         builder: (context, soilProvider, child) {
-          if (soilProvider.isLoading) {
-            return Center(child: CircularProgressIndicator());
+          if (soilProvider.isLoading && soilProvider.latestReading == null) {
+            return _buildLoadingState();
+          }
+
+          if (soilProvider.error != null) {
+            return _buildErrorState(soilProvider);
           }
 
           if (soilProvider.latestReading == null) {
-            return Center(child: Text('No data available'));
+            return _buildNoDataState(soilProvider);
           }
 
-          final reading = soilProvider.latestReading!;
-
-          // Extract values from the new data structure
-          double humidity = _getDoubleValue(reading, 'humidity');
-          double soilMoisturePercent = _getDoubleValue(reading, 'soilMoisturePercent');
-          int soilMoistureRaw = _getIntValue(reading, 'soilMoistureRaw');
-          double temperature = _getDoubleValue(reading, 'temperature');
-          String timestamp = _getTimestamp(reading);
-
-          return SingleChildScrollView(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              children: [
-                // Welcome Container
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(20),
-                  margin: EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF658C83),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Live Soil Monitoring',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Real-time soil health data and sensor readings',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white.withOpacity(0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Section Header
-                Text(
-                  'Sensor Readings',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF333333),
-                  ),
-                ),
-                SizedBox(height: 16),
-
-                // First row - 2 widgets
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildSensorCard(
-                        'Soil Moisture',
-                        Icons.water_drop,
-                        '${soilMoisturePercent.toStringAsFixed(1)}%',
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: _buildSensorCard(
-                        'Temperature',
-                        Icons.thermostat,
-                        '${temperature.toStringAsFixed(1)}°C',
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12),
-
-                // Second row - 2 widgets
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildSensorCard(
-                        'Humidity',
-                        Icons.cloud,
-                        '${humidity.toStringAsFixed(1)}%',
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: _buildSensorCard(
-                        'Raw Moisture',
-                        Icons.analytics,
-                        '$soilMoistureRaw',
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12),
-
-                // Third row - 2 widgets (Placeholders)
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildPlaceholderCard('pH Sensor', Icons.science),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: _buildPlaceholderCard('Nutrients', Icons.eco),
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 20),
-                Card(
-                  color: Colors.grey.shade100,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Last Updated: ${_formatTimestamp(timestamp)}',
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontSize: 14,
-                          ),
-                        ),
-                        SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () => soilProvider.refreshData(),
-                            child: Text('Refresh Data'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF658C83),
-                              foregroundColor: Colors.white,
-                              minimumSize: Size(double.infinity, 50),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
+          return _buildDataState(soilProvider);
         },
       ),
     );
   }
 
-  Widget _buildSensorCard(String title, IconData icon, String value) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text(
+            'Loading soil data...',
+            style: TextStyle(
+              color: Color(0xFF658C83),
+              fontSize: 16,
+            ),
+          ),
+        ],
       ),
-      child: Container(
-        height: 110, // Reduced height
-        padding: EdgeInsets.all(12), // Reduced padding
+    );
+  }
+
+  Widget _buildErrorState(SoilProvider soilProvider) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              icon,
-              size: 28, // Smaller icon
-              color: Color(0xFF658C83),
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red,
             ),
-            SizedBox(height: 6), // Reduced spacing
+            SizedBox(height: 16),
+            Text(
+              'Error Loading Data',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              soilProvider.error!,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => soilProvider.refreshData(),
+              child: Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF658C83),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoDataState(SoilProvider soilProvider) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.sensors_off,
+            size: 64,
+            color: Colors.grey,
+          ),
+          SizedBox(height: 16),
+          Text(
+            'No Data Available',
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'No sensor data available',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+            ),
+          ),
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () => soilProvider.refreshData(),
+            child: Text('Refresh'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF658C83),
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDataState(SoilProvider soilProvider) {
+    final reading = soilProvider.latestReading!;
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Card(
+            elevation: 4,
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.circle, color: Colors.green, size: 12),
+                      SizedBox(width: 8),
+                      Text(
+                        'LIVE - Real-time Data',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Sensor: ${reading.sensorId}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Time: ${reading.formattedTime}',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Date: ${reading.formattedDate}',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '${reading.timeAgo}',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: 16),
+
+          GridView.count(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.0,
+            children: [
+              _buildDataCard(
+                'Temperature',
+                Icons.thermostat,
+                '${reading.temperature.toStringAsFixed(1)}°C',
+                _getTemperatureColor(reading.temperature),
+              ),
+              _buildDataCard(
+                'Humidity',
+                Icons.water_drop,
+                '${reading.humidity.toStringAsFixed(1)}%',
+                _getHumidityColor(reading.humidity),
+              ),
+              _buildDataCard(
+                'Soil Moisture',
+                Icons.grass,
+                '${reading.soilMoisturePercent.toStringAsFixed(1)}%',
+                _getMoistureColor(reading.soilMoisturePercent),
+              ),
+              _buildDataCard(
+                'Raw Value',
+                Icons.analytics,
+                '${reading.soilMoistureRaw}',
+                Colors.blue,
+              ),
+            ],
+          ),
+
+          SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => soilProvider.refreshData(),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.refresh),
+                  SizedBox(width: 8),
+                  Text('Refresh Data'),
+                ],
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF658C83),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDataCard(String title, IconData icon, String value, Color color) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 32, color: color),
+            SizedBox(height: 8),
             Text(
               title,
               style: TextStyle(
-                fontSize: 12, // Smaller font
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF333333),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 1, // Prevent text wrapping
             ),
-            SizedBox(height: 2), // Minimal spacing
+            SizedBox(height: 4),
             Text(
               value,
               style: TextStyle(
-                fontSize: 16, // Smaller font
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF658C83),
+                color: color,
               ),
-              maxLines: 1, // Prevent text wrapping
             ),
           ],
         ),
@@ -235,85 +318,21 @@ class LiveDataPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholderCard(String title, IconData icon) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Container(
-        height: 110, // Reduced height
-        padding: EdgeInsets.all(12), // Reduced padding
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 28, // Smaller icon
-              color: Color(0xFF658C83),
-            ),
-            SizedBox(height: 6), // Reduced spacing
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 12, // Smaller font
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF333333),
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1, // Prevent text wrapping
-            ),
-            SizedBox(height: 2), // Minimal spacing
-            Text(
-              'Coming Soon',
-              style: TextStyle(
-                fontSize: 10, // Smaller font
-                color: Colors.grey,
-              ),
-              maxLines: 1, // Prevent text wrapping
-            ),
-          ],
-        ),
-      ),
-    );
+  Color _getTemperatureColor(double temperature) {
+    if (temperature < 15) return Colors.blue;
+    if (temperature > 35) return Colors.red;
+    return Colors.green;
   }
 
-  // Helper method to safely get double values from the map
-  double _getDoubleValue(Map<String, dynamic> reading, String key) {
-    final value = reading[key];
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0.0;
-    return 0.0;
+  Color _getHumidityColor(double humidity) {
+    if (humidity < 30) return Colors.orange;
+    if (humidity > 80) return Colors.blue;
+    return Colors.green;
   }
 
-  // Helper method to safely get int values from the map
-  int _getIntValue(Map<String, dynamic> reading, String key) {
-    final value = reading[key];
-    if (value is int) return value;
-    if (value is double) return value.toInt();
-    if (value is String) return int.tryParse(value) ?? 0;
-    return 0;
-  }
-
-  // Helper method to get timestamp from the map
-  String _getTimestamp(Map<String, dynamic> reading) {
-    final timestamp = reading['timestamp'];
-    if (timestamp is String) return timestamp;
-    if (timestamp is int) {
-      return DateTime.fromMillisecondsSinceEpoch(timestamp).toIso8601String();
-    }
-    if (timestamp is DateTime) return timestamp.toIso8601String();
-    return 'Unknown';
-  }
-
-  // Helper method to format timestamp for display
-  String _formatTimestamp(String timestamp) {
-    try {
-      final dateTime = DateTime.parse(timestamp);
-      return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}';
-    } catch (e) {
-      return timestamp;
-    }
+  Color _getMoistureColor(double moisture) {
+    if (moisture < 30) return Colors.red;
+    if (moisture < 60) return Colors.orange;
+    return Colors.green;
   }
 }

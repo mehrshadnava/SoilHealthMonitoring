@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:soil_monitoring_app/presentation/pages/dashboard/recommendations_page.dart';
 import 'package:soil_monitoring_app/presentation/widgets/dashboard/dashboard_card.dart';
 
+
 class DashboardPage extends StatelessWidget {
+  const DashboardPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Soil Monitoring Dashboard',
           style: TextStyle(
             fontSize: 20,
@@ -15,27 +19,27 @@ class DashboardPage extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        backgroundColor: Color(0xFF648b81),
+        backgroundColor: const Color(0xFF648b81),
         elevation: 0,
         centerTitle: true,
       ),
       body: SafeArea(
         child: ListView(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           children: [
             // Welcome Container
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(20),
-              margin: EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.only(bottom: 24),
               decoration: BoxDecoration(
-                color: Color(0xFF648b81),
+                color: const Color(0xFF648b81),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Welcome to Soil Monitor',
                     style: TextStyle(
                       fontSize: 16,
@@ -43,7 +47,7 @@ class DashboardPage extends StatelessWidget {
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     'Monitor your soil health and get smart recommendations',
                     style: TextStyle(
@@ -56,7 +60,7 @@ class DashboardPage extends StatelessWidget {
             ),
 
             // Section Header
-            Text(
+            const Text(
               'Soil Monitoring Features',
               style: TextStyle(
                 fontSize: 20,
@@ -64,7 +68,7 @@ class DashboardPage extends StatelessWidget {
                 color: Color(0xFF333333),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // First row - 2 widgets
             Row(
@@ -73,22 +77,22 @@ class DashboardPage extends StatelessWidget {
                   child: DashboardCard(
                     title: 'Live Data',
                     icon: Icons.monitor_heart,
-                    color: Color(0xFF648b81), // Green color
+                    color: const Color(0xFF648b81),
                     onTap: () => Navigator.pushNamed(context, '/live_data'),
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
                   child: DashboardCard(
                     title: 'Past Data',
                     icon: Icons.history,
-                    color: Color(0xFF648b81), // Green color
+                    color: const Color(0xFF648b81),
                     onTap: () => Navigator.pushNamed(context, '/past_data'),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
 
             // Second row - 2 widgets
             Row(
@@ -97,24 +101,32 @@ class DashboardPage extends StatelessWidget {
                   child: DashboardCard(
                     title: 'Soil Report',
                     icon: Icons.analytics,
-                    color: Color(0xFF648b81), // Green color
+                    color: const Color(0xFF648b81),
                     onTap: () => Navigator.pushNamed(context, '/report'),
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
                   child: DashboardCard(
                     title: 'Recommendations',
                     icon: Icons.eco,
-                    color: Color(0xFF648b81), // Green color
-                    onTap: () => Navigator.pushNamed(context, '/recommendations'),
+                    color: const Color(0xFF648b81),
+                    onTap: () {
+                      // FIXED: Navigate to RecommendationsPage instead of showing coming soon
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RecommendationsPage(),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
             ),
           ],
         ),
-     ),
-);
-}
+      ),
+    );
+  }
 }

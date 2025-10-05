@@ -1,181 +1,314 @@
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:soil_monitoring_app/core/constants/api_constants.dart';
+
 class AIService {
-  AIService(); // No parameters needed
+  GenerativeModel? _model;
 
-  Future<Map<String, dynamic>> generateSoilReport(List<dynamic> readings) async {
-    if (readings.isEmpty) {
-      return _generateFallbackReport();
-    }
-
-    // Use the first reading as current data
-    final currentReading = readings.first;
-    
-    // Return a simple heuristic report
-    return _generateHeuristicReport(currentReading);
+  AIService() {
+    _initializeModel();
   }
 
-  Map<String, dynamic> _generateHeuristicReport(dynamic reading) {
-    // Extract values safely
-    double pH = _getDoubleValue(reading, 'pH');
-    double nitrogen = _getDoubleValue(reading, 'nitrogen');
-    double phosphorus = _getDoubleValue(reading, 'phosphorus');
-    double potassium = _getDoubleValue(reading, 'potassium');
-    double moisture = _getDoubleValue(reading, 'moisture');
-    double temperature = _getDoubleValue(reading, 'temperature');
-    double ec = _getDoubleValue(reading, 'electricalConductivity');
-    
-    double fertilityIndex = _calculateFertilityIndex(pH, nitrogen, phosphorus, potassium);
-    String soilQuality = _assessSoilQuality(fertilityIndex);
-    
-    return {
-      'soilQuality': soilQuality,
-      'fertilityIndex': fertilityIndex,
-      'cropSuitability': _getCropSuitability(pH, fertilityIndex),
-      'limitations': _identifyLimitations(pH, nitrogen, phosphorus, potassium, moisture, ec),
-      'warnings': _generateWarnings(reading, temperature, moisture),
-      'recommendations': _generateRecommendations(pH, nitrogen, phosphorus, potassium, moisture),
-    };
+  void _initializeModel() {
+    // Try multiple model names in order
+    final modelNames = [
+      'gemini-2.5-flash',
+    ];
+
+    for (final modelName in modelNames) {
+      try {
+        _model = GenerativeModel(
+          model: modelName,
+          apiKey: ApiConstants.geminiApiKey,
+        );
+        print('✅ Successfully initialized model: $modelName');
+        break;
+      } catch (e) {
+        print('❌ Failed to initialize model $modelName: $e');
+        continue;
+      }
+    }
   }
 
-  double _getDoubleValue(dynamic reading, String key) {
-    if (reading is Map) {
-      return (reading[key] ?? 0.0).toDouble();
+  // NEW METHOD: Generate content using custom prompt
+  Future<String> generateContent(String prompt) async {
+    // Check if API key is set
+    if (ApiConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY_HERE' || 
+        ApiConstants.geminiApiKey.isEmpty) {
+      return '''
+⚠️ API Key Not Configured
+
+Please set up your Gemini API key to generate AI-powered content:
+
+1. Get your FREE API key from: https://aistudio.google.com/
+2. Update lib/core/constants/api_constants.dart
+3. Replace "YOUR_GEMINI_API_KEY_HERE" with your actual key
+4. Restart the app
+
+Without the API key, only basic analysis is available.
+''';
     }
-    return 0.0;
+
+    // Check if model initialized
+    if (_model == null) {
+      return 'Unable to generate content: AI model not initialized. Please check your API configuration.';
+    }
+
+    try {
+      final response = await _model!.generateContent([Content.text(prompt)]);
+      return response.text ?? 'Unable to generate content at this time.';
+    } catch (e) {
+      print('Error generating content: $e');
+      return 'Error generating content: ${e.toString()}';
+    }
   }
 
-  double _calculateFertilityIndex(double pH, double nitrogen, double phosphorus, double potassium) {
-    double index = 0.0;
-    
-    // pH score (optimal range 6.0-7.5)
-    if (pH >= 6.0 && pH <= 7.5) {
-      index += 0.3;
-    } else if (pH >= 5.5 && pH <= 8.0) {
-      index += 0.15;
+  Future<String> generateSoilReport(Map<String, dynamic> soilData) async {
+    // Check if API key is set
+    if (ApiConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY_HERE' || 
+        ApiConstants.geminiApiKey.isEmpty) {
+      return _getApiKeyNotSetReport(soilData);
     }
-    
-    // Nutrient scores
-    if (nitrogen > 25) index += 0.25;
-    else if (nitrogen > 15) index += 0.15;
-    
-    if (phosphorus > 20) index += 0.25;
-    else if (phosphorus > 10) index += 0.15;
-    
-    if (potassium > 200) index += 0.2;
-    else if (potassium > 100) index += 0.1;
-    
-    return index.clamp(0.0, 1.0);
+
+    // Check if model initialized
+    if (_model == null) {
+      return _getFallbackReport(soilData);
+    }
+
+    try {
+      final prompt = _buildSoilReportPrompt(soilData);
+      final response = await _model!.generateContent([Content.text(prompt)]);
+      return response.text ?? 'Unable to generate soil report at this time.';
+    } catch (e) {
+      print('Error generating soil report: $e');
+      return _getErrorReport(soilData, e.toString());
+    }
   }
 
-  String _assessSoilQuality(double index) {
-    if (index >= 0.8) return 'Excellent';
-    if (index >= 0.6) return 'Good';
-    if (index >= 0.4) return 'Fair';
-    return 'Poor';
+  String _getApiKeyNotSetReport(Map<String, dynamic> soilData) {
+    return '''
+⚠️ API Key Not Configured
+
+Please set up your Gemini API key to generate AI-powered soil reports:
+
+1. Get your FREE API key from: https://aistudio.google.com/
+2. Update lib/core/constants/api_constants.dart
+3. Replace "YOUR_GEMINI_API_KEY_HERE" with your actual key
+4. Restart the app
+
+CURRENT SOIL READINGS:
+• Temperature: ${soilData['temperature']}°C
+• Humidity: ${soilData['humidity']}%
+• Soil Moisture: ${soilData['soilMoisturePercent']}%
+
+BASIC ASSESSMENT:
+${_assessTemperature(soilData['temperature'])}
+${_assessHumidity(soilData['humidity'])}
+${_assessMoisture(soilData['soilMoisturePercent'])}
+
+With AI enabled, you'll get:
+✓ Detailed crop recommendations
+✓ Seasonal planting advice  
+✓ Soil management tips
+✓ Pest and disease prevention
+''';
   }
 
-  String _getCropSuitability(double pH, double fertilityIndex) {
-    if (fertilityIndex >= 0.7) {
-      if (pH >= 6.0 && pH <= 7.0) return 'Wheat, Corn, Soybean, Vegetables';
-      if (pH >= 5.5 && pH <= 6.5) return 'Potatoes, Berries, Tea';
-      if (pH >= 7.0 && pH <= 8.0) return 'Alfalfa, Sugar Beets, Cabbage';
-    }
-    return 'Legumes, Rye, Oats (low maintenance crops)';
+  String _getFallbackReport(Map<String, dynamic> soilData) {
+    return '''
+🌱 SOIL HEALTH REPORT
+
+Based on your sensor readings:
+
+CURRENT READINGS:
+• Temperature: ${soilData['temperature']}°C
+• Humidity: ${soilData['humidity']}%
+• Soil Moisture: ${soilData['soilMoisturePercent']}%
+
+QUICK ASSESSMENT:
+${_assessTemperature(soilData['temperature'])}
+${_assessHumidity(soilData['humidity'])}
+${_assessMoisture(soilData['soilMoisturePercent'])}
+
+SETUP REQUIRED:
+To get AI-powered analysis with crop recommendations and detailed insights, please set up your Gemini API key.
+
+Steps:
+1. Visit https://aistudio.google.com/
+2. Get your free API key
+3. Update api_constants.dart with your key
+4. Restart the app
+''';
   }
 
-  List<String> _identifyLimitations(double pH, double nitrogen, double phosphorus, double potassium, double moisture, double ec) {
-    List<String> limitations = [];
-    
-    // pH limitations
-    if (pH < 5.5) limitations.add('Highly acidic soil - add lime');
-    else if (pH < 6.0) limitations.add('Moderately acidic soil');
-    else if (pH > 8.0) limitations.add('Highly alkaline soil - add sulfur');
-    else if (pH > 7.5) limitations.add('Moderately alkaline soil');
-    
-    // Nutrient limitations
-    if (nitrogen < 15) limitations.add('Severe nitrogen deficiency');
-    else if (nitrogen < 25) limitations.add('Moderate nitrogen deficiency');
-    
-    if (phosphorus < 10) limitations.add('Severe phosphorus deficiency');
-    else if (phosphorus < 20) limitations.add('Moderate phosphorus deficiency');
-    
-    if (potassium < 100) limitations.add('Severe potassium deficiency');
-    else if (potassium < 200) limitations.add('Moderate potassium deficiency');
-    
-    // Salinity limitations
-    if (ec > 4.0) limitations.add('High salinity - consider leaching');
-    else if (ec > 2.0) limitations.add('Moderate salinity');
-    
-    return limitations.isEmpty ? ['No major limitations detected'] : limitations;
+  String _getErrorReport(Map<String, dynamic> soilData, String error) {
+    return '''
+❌ Error Generating AI Report
+
+Error details: $error
+
+This might be due to:
+• Invalid or missing API key
+• Network connectivity issues  
+• API quota exceeded
+• Model availability issues
+
+CURRENT SOIL DATA:
+• Temperature: ${soilData['temperature']}°C
+• Humidity: ${soilData['humidity']}%
+• Soil Moisture: ${soilData['soilMoisturePercent']}%
+
+BASIC ASSESSMENT:
+${_assessTemperature(soilData['temperature'])}
+${_assessHumidity(soilData['humidity'])}
+${_assessMoisture(soilData['soilMoisturePercent'])}
+
+Please check your Gemini API configuration and try again.
+''';
   }
 
-  List<String> _generateWarnings(dynamic reading, double temperature, double moisture) {
-    List<String> warnings = [];
-    
-    // Moisture warnings
-    if (moisture < 20) warnings.add('Critical moisture level - immediate irrigation needed');
-    else if (moisture < 30) warnings.add('Low moisture level - consider irrigation');
-    else if (moisture > 90) warnings.add('Waterlogged soil - improve drainage');
-    else if (moisture > 80) warnings.add('High moisture level - risk of waterlogging');
-    
-    // Temperature warnings
-    if (temperature < 5) warnings.add('Low temperature - plant growth may be slow');
-    if (temperature > 35) warnings.add('High temperature - may stress plants');
-    
-    return warnings.isEmpty ? ['Soil conditions are stable'] : warnings;
+  String _buildSoilReportPrompt(Map<String, dynamic> soilData) {
+    return '''
+You are an agricultural expert and soil scientist. Analyze this soil sensor data and provide a comprehensive, practical soil health report for farmers.
+
+SOIL SENSOR READINGS:
+- Soil Temperature: ${soilData['temperature']}°C
+- Air Humidity: ${soilData['humidity']}%
+- Soil Moisture Level: ${soilData['soilMoisturePercent']}%
+- Raw Sensor Reading: ${soilData['soilMoistureRaw']}
+- Measurement Time: ${soilData['timestampKey']}
+
+Please provide a structured report with these sections:
+
+1. SOIL HEALTH ASSESSMENT
+   - Overall condition rating (Excellent/Good/Fair/Poor)
+   - Key positive observations
+   - Areas needing attention
+
+2. PARAMETER ANALYSIS
+   - Temperature Analysis: Optimal range for common crops, current status
+   - Humidity Impact: How air humidity affects soil and plants
+   - Moisture Level: Sufficiency for different crop types
+
+3. CROP RECOMMENDATIONS
+   - Best suited crops for current conditions
+   - Planting timing suggestions
+   - Crop rotation advice
+
+4. ACTIONABLE RECOMMENDATIONS
+   - Immediate actions (if needed)
+   - Irrigation suggestions
+   - Soil management tips
+   - Monitoring frequency
+
+5. ALERTS & WARNINGS
+   - Critical conditions requiring immediate action
+   - Preventive measures
+   - Seasonal considerations
+
+Format the report in clear, bullet-point style that's easy for farmers to understand. Focus on practical, actionable advice.
+''';
   }
 
-  List<String> _generateRecommendations(double pH, double nitrogen, double phosphorus, double potassium, double moisture) {
-    List<String> recommendations = [];
-    
-    // pH recommendations
-    if (pH < 6.0) {
-      recommendations.add('Apply agricultural lime: 1-2 tons per hectare');
-    } else if (pH > 7.5) {
-      recommendations.add('Apply elemental sulfur: 500-1000 kg per hectare');
+  // Alternative method for more detailed analysis
+  Future<String> generateDetailedSoilAnalysis(Map<String, dynamic> soilData) async {
+    // Check if API key is set
+    if (ApiConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY_HERE' || 
+        ApiConstants.geminiApiKey.isEmpty) {
+      return '''
+Quick Soil Analysis (API Key Required)
+
+Current readings show:
+• Temperature: ${soilData['temperature']}°C - ${_getTemperatureStatus(soilData['temperature'])}
+• Humidity: ${soilData['humidity']}% - ${_getHumidityStatus(soilData['humidity'])}
+• Soil Moisture: ${soilData['soilMoisturePercent']}% - ${_getMoistureStatus(soilData['soilMoisturePercent'])}
+
+Set up your Gemini API key at https://aistudio.google.com/ for detailed AI analysis with crop-specific recommendations.
+''';
     }
-    
-    // Nutrient recommendations
-    if (nitrogen < 25) {
-      double deficit = 25 - nitrogen;
-      recommendations.add('Apply urea: ${(deficit * 2.17).toStringAsFixed(1)} kg per hectare');
+
+    // Check if model initialized
+    if (_model == null) {
+      return '''
+Quick Soil Analysis
+
+${_assessTemperature(soilData['temperature'])}
+${_assessHumidity(soilData['humidity'])}
+${_assessMoisture(soilData['soilMoisturePercent'])}
+
+Configure your API key for AI-powered insights.
+''';
     }
-    
-    if (phosphorus < 20) {
-      double deficit = 20 - phosphorus;
-      recommendations.add('Apply DAP: ${(deficit * 4.35).toStringAsFixed(1)} kg per hectare');
+
+    try {
+      final prompt = '''
+Provide a quick soil analysis based on these readings:
+
+- Soil Temperature: ${soilData['temperature']}°C
+- Air Humidity: ${soilData['humidity']}%
+- Soil Moisture: ${soilData['soilMoisturePercent']}%
+
+Give a brief assessment in 3-4 bullet points focusing on:
+1. Current soil condition
+2. Suitable crops
+3. Any immediate concerns
+4. One key recommendation
+
+Keep it concise and practical for farmers.
+''';
+
+      final response = await _model!.generateContent([Content.text(prompt)]);
+      return response.text ?? 'Unable to generate quick analysis.';
+    } catch (e) {
+      return '''
+Quick Analysis (Fallback)
+
+${_assessTemperature(soilData['temperature'])}
+${_assessHumidity(soilData['humidity'])}
+${_assessMoisture(soilData['soilMoisturePercent'])}
+
+Error: ${e.toString()}
+''';
     }
-    
-    if (potassium < 200) {
-      double deficit = 200 - potassium;
-      recommendations.add('Apply potash: ${(deficit * 1.2).toStringAsFixed(1)} kg per hectare');
-    }
-    
-    // Moisture recommendations
-    if (moisture < 30) {
-      recommendations.add('Irrigate with 20-30 mm water immediately');
-    } else if (moisture > 80) {
-      recommendations.add('Improve drainage and avoid irrigation for 5-7 days');
-    }
-    
-    // General recommendations
-    recommendations.add('Test soil again in 2-3 weeks to monitor improvements');
-    recommendations.add('Consider organic compost application for long-term soil health');
-    
-    return recommendations.isEmpty ? ['Maintain current practices - soil is in good condition'] : recommendations;
   }
 
-  Map<String, dynamic> _generateFallbackReport() {
-    return {
-      'soilQuality': 'Unknown',
-      'fertilityIndex': 0.5,
-      'cropSuitability': 'Various crops (data limited)',
-      'limitations': ['Insufficient data for detailed analysis'],
-      'warnings': ['Collect more soil readings for accurate assessment'],
-      'recommendations': [
-        'Collect soil samples from multiple locations',
-        'Test soil at different depths',
-        'Monitor soil conditions regularly'
-      ],
-    };
+  String _assessTemperature(double temperature) {
+    if (temperature < 10) return '• Temperature: Too cold for most crops (${temperature}°C)';
+    if (temperature > 35) return '• Temperature: Too hot, risk of heat stress (${temperature}°C)';
+    if (temperature >= 15 && temperature <= 30) return '• Temperature: Optimal for most crops (${temperature}°C)';
+    return '• Temperature: Within acceptable range (${temperature}°C)';
+  }
+
+  String _assessHumidity(double humidity) {
+    if (humidity < 30) return '• Humidity: Low, may need irrigation (${humidity}%)';
+    if (humidity > 80) return '• Humidity: High, watch for fungal issues (${humidity}%)';
+    return '• Humidity: Normal range (${humidity}%)';
+  }
+
+  String _assessMoisture(double moisture) {
+    if (moisture < 30) return '• Moisture: Low, plants may be stressed (${moisture}%)';
+    if (moisture > 90) return '• Moisture: High, risk of waterlogging (${moisture}%)';
+    if (moisture >= 40 && moisture <= 80) return '• Moisture: Ideal for most plants (${moisture}%)';
+    return '• Moisture: Within acceptable range (${moisture}%)';
+  }
+
+  // Helper methods for status indicators
+  String _getTemperatureStatus(double temperature) {
+    if (temperature < 10) return 'Too Cold';
+    if (temperature > 35) return 'Too Hot';
+    if (temperature >= 15 && temperature <= 30) return 'Optimal';
+    return 'Acceptable';
+  }
+
+  String _getHumidityStatus(double humidity) {
+    if (humidity < 30) return 'Low';
+    if (humidity > 80) return 'High';
+    return 'Normal';
+  }
+
+  String _getMoistureStatus(double moisture) {
+    if (moisture < 30) return 'Low';
+    if (moisture > 90) return 'High';
+    if (moisture >= 40 && moisture <= 80) return 'Ideal';
+    return 'Acceptable';
   }
 }

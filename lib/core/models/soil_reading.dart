@@ -46,9 +46,11 @@ class SoilReading {
   }
 
   DateTime get dateTime {
+    // Timestamp is now in seconds (from Arduino NTP)
     if (timestamp > 0) {
       return DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
     } else {
+      // Fallback to timestampKey
       final keyTimestamp = int.tryParse(timestampKey) ?? 0;
       return DateTime.fromMillisecondsSinceEpoch(keyTimestamp * 1000);
     }
@@ -62,6 +64,11 @@ class SoilReading {
     return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
   }
 
+  String get formattedDateTime {
+    return '$formattedDate $formattedTime';
+  }
+
+  // Human readable time ago
   String get timeAgo {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
@@ -81,6 +88,6 @@ class SoilReading {
 
   @override
   String toString() {
-    return 'SoilReading(sensor: $sensorId, time: $formattedDate $formattedTime, temp: $temperature°C, humidity: $humidity%, moisture: $soilMoisturePercent%)';
+    return 'SoilReading(sensor: $sensorId, time: $formattedDateTime, temp: $temperature°C, humidity: $humidity%, moisture: $soilMoisturePercent%)';
   }
 }

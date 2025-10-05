@@ -1,5 +1,3 @@
-// ignore_for_file: unnecessary_cast
-
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -7,7 +5,7 @@ class FirebaseService {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Real Firebase Authentication methods
+  // ========== AUTHENTICATION METHODS ==========
   Future<User?> signInWithEmail(String email, String password) async {
     try {
       UserCredential result = await _auth.signInWithEmailAndPassword(
@@ -57,164 +55,176 @@ class FirebaseService {
     }
   }
 
-  // Get current user
   User? getCurrentUser() {
     return _auth.currentUser;
   }
 
-  // Sign out
   Future<void> signOut() async {
     await _auth.signOut();
   }
 
-  // Check if user is logged in
   bool isUserLoggedIn() {
     return _auth.currentUser != null;
   }
 
-  // UPDATED: Soil Reading methods for Realtime Database
-  Stream<List<Map<String, dynamic>>> getSoilReadings() {
-    return _database
-        .child('sensorData')
-        .orderByKey()
-        .limitToLast(50)
-        .onValue
-        .map((event) {
-      final Map<dynamic, dynamic>? data = event.snapshot.value as Map<dynamic, dynamic>?;
-      final List<Map<String, dynamic>> readings = [];
-      
-      if (data != null) {
-        data.forEach((key, value) {
-          try {
-            final readingData = Map<String, dynamic>.from(value);
-            readingData['id'] = key.toString();
-            readings.add(readingData);
-          } catch (e) {
-            print('Error parsing reading $key: $e');
-          }
-        });
-      }
-      
-      // Sort by timestamp descending (newest first)
-      readings.sort((a, b) {
-        final timestampA = _getTimestampFromData(a);
-        final timestampB = _getTimestampFromData(b);
-        return timestampB.compareTo(timestampA);
-      });
-      return readings;
-    });
-  }
-
-  // UPDATED: Get latest reading stream
-  Stream<Map<String, dynamic>?> getLatestReadingStream() {
+  // ========== LIVE DATA METHODS ==========
+  
+  // Get the latest entry from ALL sensors
+  Stream<Map<String, dynamic>?> getLatestDataStream() {
     return _database
         .child('sensorData')
         .orderByKey()
         .limitToLast(1)
         .onValue
         .map((event) {
-      final Map<dynamic, dynamic>? data = event.snapshot.value as Map<dynamic, dynamic>?;
+      final data = event.snapshot.value;
       
-      if (data != null && data.isNotEmpty) {
-        final entry = data.entries.first;
-        try {
-          final readingData = Map<String, dynamic>.from(entry.value);
-          readingData['id'] = entry.key.toString();
-          return readingData;
-        } catch (e) {
-          print('Error parsing latest reading: $e');
+      print('Latest data stream: $data'); // Debug
+      
+      if (data == null) {
+        return null;
+      }
+
+      if (data is Map) {
+        final entries = data.entries;
+        if (entries.isNotEmpty) {
+          final latestEntry = entries.first;
+          final timestampKey = latestEntry.key.toString();
+          final readingData = latestEntry.value;
+          
+          if (readingData is Map) {
+            final reading = Map<String, dynamic>.from(readingData);
+            reading['sensorId'] = 'default'; // Since you don't have multiple sensors
+            reading['timestampKey'] = timestampKey;
+            print('Latest reading: $reading'); // Debug
+            return reading;
+          }
         }
       }
+      
       return null;
     });
   }
 
-  // UPDATED: Get historical readings
-  Future<List<Map<String, dynamic>>> getHistoricalReadings(DateTime start, DateTime end) async {
-    final startTimestamp = start.millisecondsSinceEpoch;
-    final endTimestamp = end.millisecondsSinceEpoch;
-    
-    final snapshot = await _database
-        .child('sensorData')
-        .orderByKey()
-        .startAt(startTimestamp.toString())
-        .endAt(endTimestamp.toString())
-        .once();
-
-    final Map<dynamic, dynamic>? data = snapshot.snapshot.value as Map<dynamic, dynamic>?;
-    final List<Map<String, dynamic>> readings = [];
-    
-    if (data != null) {
-      data.forEach((key, value) {
-        try {
-          final readingData = Map<String, dynamic>.from(value);
-          readingData['id'] = key.toString();
-          readings.add(readingData);
-        } catch (e) {
-          print('Error parsing historical reading $key: $e');
-        }
-      });
-    }
-    
-    // Sort by timestamp descending
-    readings.sort((a, b) {
-      final timestampA = _getTimestampFromData(a);
-      final timestampB = _getTimestampFromData(b);
-      return timestampB.compareTo(timestampA);
-    });
-    return readings;
-  }
-
-  // UPDATED: Get single latest reading
-  Future<Map<String, dynamic>?> getLatestReading() async {
-    final snapshot = await _database
-        .child('sensorData')
-        .orderByKey()
-        .limitToLast(1)
-        .once();
-
-    final Map<dynamic, dynamic>? data = snapshot.snapshot.value as Map<dynamic, dynamic>?;
-    
-    if (data != null && data.isNotEmpty) {
-      final entry = data.entries.first;
-      try {
-        final readingData = Map<String, dynamic>.from(entry.value);
-        readingData['id'] = entry.key.toString();
-        return readingData;
-      } catch (e) {
-        print('Error parsing latest reading: $e');
-      }
-    }
-    return null;
-  }
-
-  // Helper to get timestamp from data
-  DateTime _getTimestampFromData(Map<String, dynamic> data) {
+  // Get latest data (for initial load)
+  Future<Map<String, dynamic>?> getLatestData() async {
     try {
-      // Try to get timestamp from the data
-      if (data['timestamp'] != null) {
-        if (data['timestamp'] is int) {
-          return DateTime.fromMillisecondsSinceEpoch(data['timestamp']);
-        } else if (data['timestamp'] is String) {
-          return DateTime.parse(data['timestamp']);
+      final snapshot = await _database
+          .child('sensorData')
+          .orderByKey()
+          .limitToLast(1)
+          .once();
+
+      final data = snapshot.snapshot.value;
+      
+      print('Latest data fetch: $data'); // Debug
+      
+      if (data is Map) {
+        final entries = data.entries;
+        if (entries.isNotEmpty) {
+          final latestEntry = entries.first;
+          final timestampKey = latestEntry.key.toString();
+          final readingData = latestEntry.value;
+          
+          if (readingData is Map) {
+            final reading = Map<String, dynamic>.from(readingData);
+            reading['sensorId'] = 'default';
+            reading['timestampKey'] = timestampKey;
+            return reading;
+          }
         }
       }
-      // Fallback: use the key as timestamp
-      if (data['id'] != null) {
-        return DateTime.fromMillisecondsSinceEpoch(int.parse(data['id']));
-      }
+      
+      return null;
     } catch (e) {
-      print('Error parsing timestamp: $e');
+      print('Error getting latest data: $e');
+      return null;
     }
-    return DateTime.now();
   }
 
-  // Add soil reading (if needed)
-  Future<void> addSoilReading(Map<String, dynamic> reading) async {
-    final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-    await _database
+  // Get list of available sensors
+  Stream<List<String>> getAvailableSensorsStream() {
+    return _database
         .child('sensorData')
-        .child(timestamp)
-        .set(reading);
+        .onValue
+        .map((event) {
+      final data = event.snapshot.value;
+      final List<String> sensorIds = [];
+      
+      if (data is Map) {
+        // Since you have direct timestamps, return a single default sensor
+        sensorIds.add('default');
+      }
+      
+      return sensorIds;
+    });
+  }
+
+  // ========== PAST DATA METHODS ==========
+
+  // Get all sensor data for past data page - FIXED VERSION
+  Stream<List<Map<String, dynamic>>> getAllSensorData() {
+    return _database
+        .child('sensorData')
+        .orderByKey()
+        .onValue
+        .map((event) {
+      final data = event.snapshot.value;
+      final List<Map<String, dynamic>> allData = [];
+      
+      print('Raw Firebase data: $data'); // Debug
+      
+      if (data is Map) {
+        data.forEach((timestamp, readingData) {
+          print('Processing timestamp: $timestamp, data: $readingData'); // Debug
+          if (readingData is Map) {
+            try {
+              final reading = Map<String, dynamic>.from(readingData);
+              reading['sensorId'] = 'default'; // Single sensor
+              reading['timestampKey'] = timestamp.toString();
+              allData.add(reading);
+              print('Added reading: $reading'); // Debug
+            } catch (e) {
+              print('Error parsing reading $timestamp: $e');
+            }
+          }
+        });
+      }
+      
+      print('Total records found: ${allData.length}'); // Debug
+      
+      // Sort by timestamp descending (newest first)
+      allData.sort((a, b) {
+        final timestampA = int.tryParse(a['timestampKey'] ?? '0') ?? 0;
+        final timestampB = int.tryParse(b['timestampKey'] ?? '0') ?? 0;
+        return timestampB.compareTo(timestampA);
+      });
+      
+      return allData;
+    });
+  }
+
+  // Get data for a specific timestamp
+  Future<Map<String, dynamic>?> getDataByTimestamp(String timestamp) async {
+    try {
+      final snapshot = await _database
+          .child('sensorData')
+          .child(timestamp)
+          .once();
+
+      final readingData = snapshot.snapshot.value;
+      
+      if (readingData is Map) {
+        final reading = Map<String, dynamic>.from(readingData);
+        reading['sensorId'] = 'default';
+        reading['timestampKey'] = timestamp;
+        return reading;
+      }
+      
+      return null;
+    } catch (e) {
+      print('Error getting data by timestamp: $e');
+      return null;
+    }
   }
 }
