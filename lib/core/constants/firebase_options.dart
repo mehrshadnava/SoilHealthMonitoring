@@ -39,11 +39,11 @@ class DefaultFirebaseOptions {
   }
 
 static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBNM2OaQaY5unRso7kH-uD0lkHJhQdlB7g',
-    appId: '1:755881559085:android:4fdd4edf63e36589aee4a4',
-    messagingSenderId: '755881559085',
-    projectId: 'soilmonitoringapp-76262',
-    storageBucket: 'soilmonitoringapp-76262.firebasestorage.app');
+    apiKey: 'enter your api key here ',
+    appId: 'api id',
+    messagingSenderId: 'sender id ',
+    projectId: 'your project id',
+    storageBucket: 'your storage bucket',);
     
 
   static const FirebaseOptions ios = FirebaseOptions(
