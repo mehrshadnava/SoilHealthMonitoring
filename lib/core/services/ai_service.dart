@@ -32,7 +32,7 @@ class AIService {
   // NEW METHOD: Generate content using custom prompt
   Future<String> generateContent(String prompt) async {
     // Check if API key is set
-    if (ApiConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY_HERE' || 
+    if (ApiConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY_HERE' ||
         ApiConstants.geminiApiKey.isEmpty) {
       return '''
 ⚠️ API Key Not Configured
@@ -64,7 +64,7 @@ Without the API key, only basic analysis is available.
 
   Future<String> generateSoilReport(Map<String, dynamic> soilData) async {
     // Check if API key is set
-    if (ApiConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY_HERE' || 
+    if (ApiConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY_HERE' ||
         ApiConstants.geminiApiKey.isEmpty) {
       return _getApiKeyNotSetReport(soilData);
     }
@@ -168,51 +168,48 @@ Please check your Gemini API configuration and try again.
 
   String _buildSoilReportPrompt(Map<String, dynamic> soilData) {
     return '''
-You are an agricultural expert and soil scientist. Analyze this soil sensor data and provide a comprehensive, practical soil health report for farmers.
+You are an agricultural expert and soil scientist. Analyze this soil sensor data and provide a comprehensive, visually engaging soil health report for farmers. 
+- ⚠ Avoid using asterisks (*) or other decorative symbols (e.g., '-', '+') in bullet points.  
+- Use emojis (e.g., ✅ for positives, ⚠ for warnings, 🌱 for general crop notes, 💧 for moisture, 🌞 for temperature, 🌫 for humidity) to make the report clean and farmer-friendly.  
 
 SOIL SENSOR READINGS:
-- Soil Temperature: ${soilData['temperature']}°C
-- Air Humidity: ${soilData['humidity']}%
-- Soil Moisture Level: ${soilData['soilMoisturePercent']}%
-- Raw Sensor Reading: ${soilData['soilMoistureRaw']}
-- Measurement Time: ${soilData['timestampKey']}
+- 🌡 Soil Temperature: ${soilData['temperature']}°C
+- 💧 Air Humidity: ${soilData['humidity']}%
+- 🌱 Soil Moisture Level: ${soilData['soilMoisturePercent']}% (Raw: ${soilData['soilMoistureRaw']})
+- ⏰ Measurement Time: ${soilData['timestampKey']}
 
-Please provide a structured report with these sections:
-
+Please structure the report with these sections, using emojis for bullet points where specified:
 1. SOIL HEALTH ASSESSMENT
-   - Overall condition rating (Excellent/Good/Fair/Poor)
-   - Key positive observations
-   - Areas needing attention
-
+   - 🌟 Overall condition rating (Excellent/Good/Fair/Poor) [Examples: 🌟 Excellent, ✅ Good, ⚠ Fair, ❌ Poor]
+   - ✅ Key positive observations (start each bullet with ✅)
+   - ⚠ Areas needing attention (start each bullet with ⚠)
 2. PARAMETER ANALYSIS
-   - Temperature Analysis: Optimal range for common crops, current status
-   - Humidity Impact: How air humidity affects soil and plants
-   - Moisture Level: Sufficiency for different crop types
-
+   - 🌞 Temperature Analysis: Optimal range for common crops, current status (use 🌞 emoji)
+   - 🌫 Humidity Impact: How air humidity affects soil and plants (use 🌫 emoji)
+   - 💧 Moisture Level: Sufficiency for different crop types (use 💧 emoji)
 3. CROP RECOMMENDATIONS
-   - Best suited crops for current conditions
-   - Planting timing suggestions
-   - Crop rotation advice
-
+   - 🌱 Best suited crops for current conditions (start each bullet with 🌱)
+   - 🗓 Planting timing suggestions (start each bullet with 🗓)
+   - 🔄 Crop rotation advice (start each bullet with 🔄)
 4. ACTIONABLE RECOMMENDATIONS
-   - Immediate actions (if needed)
-   - Irrigation suggestions
-   - Soil management tips
-   - Monitoring frequency
-
+   - ⏰ Immediate actions (if needed) (start each bullet with ⏰)
+   - 💧 Irrigation suggestions (use 💧 emoji)
+   - 🌱 Soil management tips (use 🌱 emoji)
+   - 📊 Monitoring frequency (start each bullet with 📊)
 5. ALERTS & WARNINGS
-   - Critical conditions requiring immediate action
-   - Preventive measures
-   - Seasonal considerations
+   - ❗ Critical conditions requiring immediate action (start each bullet with ❗)
+   - 🛡 Preventive measures (start each bullet with 🛡)
+   - 🌤 Seasonal considerations (start each bullet with 🌤)
 
-Format the report in clear, bullet-point style that's easy for farmers to understand. Focus on practical, actionable advice.
+Ensure sections are separated by a blank line. Keep language simple, concise, and focused on practical advice.
 ''';
   }
 
   // Alternative method for more detailed analysis
-  Future<String> generateDetailedSoilAnalysis(Map<String, dynamic> soilData) async {
+  Future<String> generateDetailedSoilAnalysis(
+      Map<String, dynamic> soilData) async {
     // Check if API key is set
-    if (ApiConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY_HERE' || 
+    if (ApiConstants.geminiApiKey == 'YOUR_GEMINI_API_KEY_HERE' ||
         ApiConstants.geminiApiKey.isEmpty) {
       return '''
 Quick Soil Analysis (API Key Required)
@@ -272,22 +269,30 @@ Error: ${e.toString()}
   }
 
   String _assessTemperature(double temperature) {
-    if (temperature < 10) return '• Temperature: Too cold for most crops (${temperature}°C)';
-    if (temperature > 35) return '• Temperature: Too hot, risk of heat stress (${temperature}°C)';
-    if (temperature >= 15 && temperature <= 30) return '• Temperature: Optimal for most crops (${temperature}°C)';
+    if (temperature < 10)
+      return '• Temperature: Too cold for most crops (${temperature}°C)';
+    if (temperature > 35)
+      return '• Temperature: Too hot, risk of heat stress (${temperature}°C)';
+    if (temperature >= 15 && temperature <= 30)
+      return '• Temperature: Optimal for most crops (${temperature}°C)';
     return '• Temperature: Within acceptable range (${temperature}°C)';
   }
 
   String _assessHumidity(double humidity) {
-    if (humidity < 30) return '• Humidity: Low, may need irrigation (${humidity}%)';
-    if (humidity > 80) return '• Humidity: High, watch for fungal issues (${humidity}%)';
+    if (humidity < 30)
+      return '• Humidity: Low, may need irrigation (${humidity}%)';
+    if (humidity > 80)
+      return '• Humidity: High, watch for fungal issues (${humidity}%)';
     return '• Humidity: Normal range (${humidity}%)';
   }
 
   String _assessMoisture(double moisture) {
-    if (moisture < 30) return '• Moisture: Low, plants may be stressed (${moisture}%)';
-    if (moisture > 90) return '• Moisture: High, risk of waterlogging (${moisture}%)';
-    if (moisture >= 40 && moisture <= 80) return '• Moisture: Ideal for most plants (${moisture}%)';
+    if (moisture < 30)
+      return '• Moisture: Low, plants may be stressed (${moisture}%)';
+    if (moisture > 90)
+      return '• Moisture: High, risk of waterlogging (${moisture}%)';
+    if (moisture >= 40 && moisture <= 80)
+      return '• Moisture: Ideal for most plants (${moisture}%)';
     return '• Moisture: Within acceptable range (${moisture}%)';
   }
 

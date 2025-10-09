@@ -303,7 +303,7 @@ class _ReportPageState extends State<ReportPage> {
       style: const TextStyle(
         fontSize: 14,
         height: 1.5,
-      ),
-    );
-  }
+     ),
+);
+}
 }

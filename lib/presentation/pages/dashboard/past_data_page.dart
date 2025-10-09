@@ -113,30 +113,16 @@ class PastDataPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    soilProvider.clearError();
-                    soilProvider.loadAllData();
-                  },
-                  child: const Text('Try Again'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF658C83),
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Go Back'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF658C83),
-                    side: const BorderSide(color: Color(0xFF658C83)),
-                  ),
-                ),
-              ],
+            ElevatedButton(
+              onPressed: () {
+                soilProvider.clearError();
+                soilProvider.loadAllData();
+              },
+              child: const Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF658C83),
+                foregroundColor: Colors.white,
+              ),
             ),
           ],
         ),
@@ -174,29 +160,15 @@ class PastDataPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    soilProvider.loadAllData();
-                  },
-                  child: const Text('Refresh'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF658C83),
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Go Back'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF658C83),
-                    side: const BorderSide(color: Color(0xFF658C83)),
-                  ),
-                ),
-              ],
+            ElevatedButton(
+              onPressed: () {
+                soilProvider.loadAllData();
+              },
+              child: const Text('Refresh'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF658C83),
+                foregroundColor: Colors.white,
+              ),
             ),
           ],
         ),
@@ -207,7 +179,7 @@ class PastDataPage extends StatelessWidget {
   Widget _buildDataList(List<SoilReading> readings, BuildContext context, SoilProvider soilProvider) {
     return Column(
       children: [
-        // Header Info with Refresh Button
+        // Header Info
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
@@ -222,20 +194,9 @@ class PastDataPage extends StatelessWidget {
                   color: Color(0xFF658C83),
                 ),
               ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.refresh, size: 20),
-                    color: const Color(0xFF658C83),
-                    onPressed: () {
-                      soilProvider.loadAllData();
-                    },
-                  ),
-                  const Icon(
-                    Icons.history,
-                    color: Color(0xFF658C83),
-                  ),
-                ],
+              const Icon(
+                Icons.history,
+                color: Color(0xFF658C83),
               ),
             ],
           ),
@@ -273,9 +234,9 @@ class PastDataPage extends StatelessWidget {
             color: const Color(0xFFE8F5E8),
             borderRadius: BorderRadius.circular(25),
           ),
-          child: Icon(
+          child: const Icon(
             Icons.thermostat,
-            color: const Color(0xFF658C83),
+            color: Color(0xFF658C83),
           ),
         ),
         title: Text(

@@ -51,14 +51,14 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
                 
                 const SizedBox(height: 20),
                 
-                // Recommendations Section
-                _buildRecommendationsSection(soilProvider),
+                // Report Generation Section
+                _buildReportSection(soilProvider),
                 
                 const SizedBox(height: 20),
                 
                 // Generated Recommendations
                 if (soilProvider.currentRecommendations != null)
-                  _buildGeneratedRecommendations(soilProvider.currentRecommendations!, soilProvider),
+                  _buildGeneratedReport(soilProvider.currentRecommendations!, soilProvider),
               ],
             ),
           );
@@ -76,7 +76,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Current Soil Conditions',
+              'Current Soil Data',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -85,9 +85,9 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
             ),
             const SizedBox(height: 12),
             if (soilProvider.latestReading != null) ...[
+              _buildDataRow('Soil Moisture', '${soilProvider.latestReading!.soilMoisturePercent.toStringAsFixed(1)}%'),
               _buildDataRow('Temperature', '${soilProvider.latestReading!.temperature.toStringAsFixed(1)}°C'),
               _buildDataRow('Humidity', '${soilProvider.latestReading!.humidity.toStringAsFixed(1)}%'),
-              _buildDataRow('Soil Moisture', '${soilProvider.latestReading!.soilMoisturePercent.toStringAsFixed(1)}%'),
               _buildDataRow('Time', '${soilProvider.latestReading!.formattedTime}'),
               _buildDataRow('Date', soilProvider.latestReading!.formattedDate),
             ] else ...[
@@ -135,7 +135,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
     );
   }
 
-  Widget _buildRecommendationsSection(SoilProvider soilProvider) {
+  Widget _buildReportSection(SoilProvider soilProvider) {
     return Card(
       elevation: 4,
       child: Padding(
@@ -144,7 +144,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Get Soil Recommendations',
+              'Generate Soil Recommendations',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -153,7 +153,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
             ),
             const SizedBox(height: 12),
             const Text(
-              'Receive AI-powered recommendations to improve your soil health and optimize growing conditions for your crops.',
+              'Get AI-powered recommendations for optimal crop growth based on your current soil conditions.',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
@@ -168,7 +168,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
                     CircularProgressIndicator(),
                     SizedBox(height: 16),
                     Text(
-                      'Analyzing soil data...',
+                      'Generating recommendations...',
                       style: TextStyle(
                         color: Color(0xFF658C83),
                       ),
@@ -184,7 +184,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
                       onPressed: soilProvider.latestReading != null
                           ? () => soilProvider.generateSoilRecommendations()
                           : null,
-                      child: const Text('Get Recommendations'),
+                      child: const Text('Comprehensive Report'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF658C83),
                         foregroundColor: Colors.white,
@@ -238,7 +238,7 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
     );
   }
 
-  Widget _buildGeneratedRecommendations(String recommendations, SoilProvider soilProvider) {
+  Widget _buildGeneratedReport(String recommendations, SoilProvider soilProvider) {
     return Card(
       elevation: 4,
       child: Padding(
@@ -246,17 +246,32 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header with title and close button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Expanded(
-                  child: Text(
-                    'Soil Health Recommendations',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF658C83),
-                    ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Soil Report',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Comprehensive Report',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF658C83),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 IconButton(
@@ -267,27 +282,43 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
                 ),
               ],
             ),
+
             const SizedBox(height: 8),
-            Text(
-              'Generated: ${DateTime.now().toString().split(' ')[0]}',
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 16),
+            
+            // Divider line
             Container(
               height: 1,
               color: Colors.grey[300],
+              margin: const EdgeInsets.symmetric(vertical: 8),
             ),
+
+            // Soil Health Report Header
+            const Text(
+              'Soil Health Report - 6/10/2025',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Generated: ${DateTime.now().toString().split(' ')[0]} ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+
             const SizedBox(height: 16),
-            // Recommendations Content with constrained height and scrolling
-            ConstrainedBox(
+            
+            // Main content with styled cards
+            Container(
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.of(context).size.height * 0.6,
               ),
               child: SingleChildScrollView(
-                child: _buildRecommendationsContent(recommendations),
+                child: _buildStyledReportCards(),
               ),
             ),
           ],
@@ -296,12 +327,133 @@ class _RecommendationsPageState extends State<RecommendationsPage> {
     );
   }
 
-  Widget _buildRecommendationsContent(String content) {
-    return SelectableText(
-      content,
-      style: const TextStyle(
-        fontSize: 14,
-        height: 1.5,
+  Widget _buildStyledReportCards() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Introduction text
+        const Text(
+          'Excessive rainfall and poor soil structure can devastate crops quickly. Implementing these preventive measures is crucial for long-term soil health and crop yield.',
+          style: TextStyle(
+            fontSize: 14,
+            height: 1.5,
+            color: Colors.black87,
+          ),
+        ),
+        
+        const SizedBox(height: 20),
+        
+        // Preventive Measures Card
+        _buildRecommendationCard(
+          icon: Icons.eco,
+          title: 'Preventive Measures:',
+          content: 'Disease-resistant crop varieties, optimal planting techniques, and regular soil testing are crucial for a healthy harvest.',
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Drainage Management Card
+        _buildRecommendationCard(
+          icon: Icons.water_drop,
+          title: 'Drainage Management:',
+          content: 'Utilize effective biological fungicides and cultural practices to reduce disease pressure from excess moisture.',
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Nutrient Leaching Card
+        _buildRecommendationCard(
+          icon: Icons.wb_sunny,
+          title: 'Nutrient Leaching:',
+          content: 'Optimize irrigation, apply organic fertilizers, and incorporate cover crops to prevent nutrient loss from the soil.',
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Soil Improvement Card
+        _buildRecommendationCard(
+          icon: Icons.landscape,
+          title: 'Soil Improvement:',
+          content: 'During humid seasons, consider adding organic matter and applying tile drainage solutions to improve aeration and nutrient retention.',
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Seasonal Considerations Card
+        _buildRecommendationCard(
+          icon: Icons.calendar_today,
+          title: 'Seasonal Considerations:',
+          content: 'During warm, humid seasons, pay close attention to soil moisture levels and pest pressure to protect sensitive crops.',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecommendationCard({
+    required IconData icon,
+    required String title,
+    required String content,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F7F4), // Light green background
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Icon
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFF658C83),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+          
+          const SizedBox(width: 12),
+          
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF658C83),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  content,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    height: 1.4,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
