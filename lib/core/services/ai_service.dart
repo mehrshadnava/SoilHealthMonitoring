@@ -167,43 +167,57 @@ Please check your Gemini API configuration and try again.
   }
 
   String _buildSoilReportPrompt(Map<String, dynamic> soilData) {
-    return '''
+  return '''
 You are an agricultural expert and soil scientist. Analyze this soil sensor data and provide a comprehensive, visually engaging soil health report for farmers. 
-- ⚠ Avoid using asterisks (*) or other decorative symbols (e.g., '-', '+') in bullet points.  
-- Use emojis (e.g., ✅ for positives, ⚠ for warnings, 🌱 for general crop notes, 💧 for moisture, 🌞 for temperature, 🌫 for humidity) to make the report clean and farmer-friendly.  
+
+IMPORTANT FORMATTING RULES:
+- DO NOT use asterisks (*) or other decorative symbols (like '-', '+') in bullet points
+- Use emojis for bullet points to make the report clean and farmer-friendly
+- Keep sections clearly separated with blank lines
+- Use simple, concise language focused on practical advice
 
 SOIL SENSOR READINGS:
-- 🌡 Soil Temperature: ${soilData['temperature']}°C
-- 💧 Air Humidity: ${soilData['humidity']}%
-- 🌱 Soil Moisture Level: ${soilData['soilMoisturePercent']}% (Raw: ${soilData['soilMoistureRaw']})
-- ⏰ Measurement Time: ${soilData['timestampKey']}
+🌡 Soil Temperature: ${soilData['temperature']}°C
+💧 Air Humidity: ${soilData['humidity']}%
+🌱 Soil Moisture Level: ${soilData['soilMoisturePercent']}% (Raw: ${soilData['soilMoistureRaw']})
+⏰ Measurement Time: ${soilData['timestampKey']}
 
-Please structure the report with these sections, using emojis for bullet points where specified:
+Please structure the report with these sections:
+
 1. SOIL HEALTH ASSESSMENT
-   - 🌟 Overall condition rating (Excellent/Good/Fair/Poor) [Examples: 🌟 Excellent, ✅ Good, ⚠ Fair, ❌ Poor]
-   - ✅ Key positive observations (start each bullet with ✅)
-   - ⚠ Areas needing attention (start each bullet with ⚠)
-2. PARAMETER ANALYSIS
-   - 🌞 Temperature Analysis: Optimal range for common crops, current status (use 🌞 emoji)
-   - 🌫 Humidity Impact: How air humidity affects soil and plants (use 🌫 emoji)
-   - 💧 Moisture Level: Sufficiency for different crop types (use 💧 emoji)
-3. CROP RECOMMENDATIONS
-   - 🌱 Best suited crops for current conditions (start each bullet with 🌱)
-   - 🗓 Planting timing suggestions (start each bullet with 🗓)
-   - 🔄 Crop rotation advice (start each bullet with 🔄)
-4. ACTIONABLE RECOMMENDATIONS
-   - ⏰ Immediate actions (if needed) (start each bullet with ⏰)
-   - 💧 Irrigation suggestions (use 💧 emoji)
-   - 🌱 Soil management tips (use 🌱 emoji)
-   - 📊 Monitoring frequency (start each bullet with 📊)
-5. ALERTS & WARNINGS
-   - ❗ Critical conditions requiring immediate action (start each bullet with ❗)
-   - 🛡 Preventive measures (start each bullet with 🛡)
-   - 🌤 Seasonal considerations (start each bullet with 🌤)
+   🌟 Overall condition rating (Excellent/Good/Fair/Poor) [Examples: 🌟 Excellent, ✅ Good, ⚠ Fair, ❌ Poor]
+   ✅ Key positive observations (start each bullet with ✅)
+   ⚠ Areas needing attention (start each bullet with ⚠)
 
-Ensure sections are separated by a blank line. Keep language simple, concise, and focused on practical advice.
+2. PARAMETER ANALYSIS
+   🌞 Temperature Analysis: Optimal range for common crops, current status
+   🌫 Humidity Impact: How air humidity affects soil and plants  
+   💧 Moisture Level: Sufficiency for different crop types
+
+3. CROP RECOMMENDATIONS
+   🌱 Best suited crops for current conditions (start each bullet with 🌱)
+   🗓 Planting timing suggestions (start each bullet with 🗓)
+   🔄 Crop rotation advice (start each bullet with 🔄)
+
+4. ACTIONABLE RECOMMENDATIONS
+   ⏰ Immediate actions (if needed) (start each bullet with ⏰)
+   💧 Irrigation suggestions
+   🌱 Soil management tips
+   📊 Monitoring frequency (start each bullet with 📊)
+
+5. ALERTS & WARNINGS
+   ❗ Critical conditions requiring immediate action (start each bullet with ❗)
+   🛡 Preventive measures (start each bullet with 🛡)
+   🌤 Seasonal considerations (start each bullet with 🌤)
+
+Remember to:
+- Use emojis consistently as specified for each section
+- Separate sections with blank lines
+- Avoid using * symbols entirely
+- Focus on practical, actionable advice for farmers
+- Keep the language simple and easy to understand
 ''';
-  }
+}
 
   // Alternative method for more detailed analysis
   Future<String> generateDetailedSoilAnalysis(
