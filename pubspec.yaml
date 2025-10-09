@@ -33,3 +33,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/images/live_data.jpg
+    - assets/images/past_data.jpg
+    - assets/images/soil_report.jpg
+    - assets/images/recommendations.jpg
